@@ -3,8 +3,6 @@
 
 #include <sstream>
 
-#include <iostream>  // TODO
-
 //*****************************************************************************
 // os::env
 //*****************************************************************************
@@ -30,11 +28,10 @@ std::string os::env::expand(const char *s) {
   utl::const_char_iterator end{};
   for (; it; suppress_increment || ++it, suppress_increment = false) {
     if (scan_to_end_of_braced_var) {
-      std::cout << "in ignore\n";
       int count{1};
       scan_to_end_of_braced_var = false;
+
       for (; it && count > 0; ++it) {
-        std::cout << "[ig] *it = " << *it << '\n';
         if (*it == '{') {
           ++count;
         } else if (*it == '}') {
@@ -47,8 +44,6 @@ std::string os::env::expand(const char *s) {
       }
       --depth;
     } else if (*it == '$') {
-      std::cout << "\nin variable expansion\n";
-
       ++it;
       if (*it == '{') {
         is_braced_var = true;
@@ -57,10 +52,6 @@ std::string os::env::expand(const char *s) {
 
       end = it;
       end.seek([] (char c) { return isalnum(c) || c == '_'; });
-      std::cout << "*end: " << *end << '\n';
-      std::cout << "${} it.to_string(end) = " << it.to_string(end) << '\n';
-      std::cout << "scan_to_end_of_braced_var = " << scan_to_end_of_braced_var << '\n';
-      std::cout << ">depth: " << depth << '\n';
 
       env = std::getenv(it.to_string(end).c_str());
       it = end;
@@ -71,17 +62,11 @@ std::string os::env::expand(const char *s) {
         continue;
       }
     } else if (is_braced_var) {
-      std::cout << "\nin braced variable expansion\n";
       is_braced_var = false;
       ++depth;
 
       end = it;
       end.seek([] (char c) { return isalnum(c) || c == '_'; });
-      std::cout << "*end: " << *end << '\n';
-      std::cout << "${} it.to_string(end) = " << it.to_string(end) << '\n';
-      std::cout << "scan_to_end_of_braced_var = " << scan_to_end_of_braced_var << '\n';
-      std::cout << ">depth: " << depth << '\n';
-
       env = std::getenv(it.to_string(end).c_str());
 
       it = end;
@@ -110,7 +95,6 @@ std::string os::env::expand(const char *s) {
       ++it;
       expanded << *it;
     } else {
-      std::cout << "<< " << *it << '\n';
       expanded << *it;
     }
   }
