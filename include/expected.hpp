@@ -230,22 +230,22 @@ class expected {
       return Result{func(std::move(storage_.error))};
     }
 
-    template <typename U>
+    template <typename U, typename std::enable_if<std::is_constructible<V, U>::value, int>::type = 0>
     V value_or(U&& fallback) & {
       if (has_value_) {
         return storage_.value;
       }
 
-      return static_cast<V>(std::forward<U>(fallback));
+      return V{std::forward<U>(fallback)};
     }
 
-    template <typename U>
+    template <typename U, typename std::enable_if<std::is_constructible<V, U>::value, int>::type = 0>
     V value_or(U&& fallback) && {
       if (has_value_) {
         return std::move(storage_.value);
       }
 
-      return static_cast<V>(std::forward<U>(fallback));
+      return V{std::forward<U>(fallback)};
     }
 
     expected<V, E>& operator=(const expected<V, E>& rhs) noexcept {
