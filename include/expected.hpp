@@ -61,224 +61,66 @@ struct normalize_expected<unexpected<F>, V, E> {
 template <typename V, typename E>
 class expected {
   public:
-
-    expected(const V& value) : has_value_{true} {
-      new (&storage_.value) V{value};
-    }
-
-    expected(V&& value) : has_value_{true} {
-      new (&storage_.value) V{std::move(value)};
-    }
+    expected(const V& value);
+    expected(V&& value);
 
     template <typename... Args>
-    expected(Args&&... args) : expected{V{std::forward<Args>(args)...}} {}
+    expected(Args&&... args);
 
-    expected(const expected<V, E>& expected) : has_value_{expected.has_value_} {
-      if (has_value_) {
-        new (&storage_.value) V{expected.storage_.value};
-      } else {
-        new (&storage_.error) E{expected.storage_.error};
-      }
-    }
+    expected(const expected<V, E>& expected);
+    expected(expected<V, E>&& expected);
 
-    expected(expected<V, E>&& expected) : has_value_{expected.has_value_} {
-      if (has_value_) {
-        new (&storage_.value) V{std::move(expected.storage_.value)};
-      } else {
-        new (&storage_.error) E{std::move(expected.storage_.error)};
-      }
-    }
+    expected(const unexpected<E>& error);
+    expected(unexpected<E>&& error);
 
-    expected(const unexpected<E>& error) : has_value_{false} {
-      new (&storage_.error) E{error.error()};
-    }
+    ~expected();
 
-    expected(unexpected<E>&& error) : has_value_{false} {
-      new (&storage_.error) E{std::move(error.error())};
-    }
+    bool has_value() const noexcept;
 
-    ~expected() {
-      destroy();
-    }
+    V& value() &;
+    const V& value() const&;
+    V&& value() &&;
 
-    bool has_value() const noexcept {
-      return has_value_;
-    }
-
-    V& value() & {
-      return storage_.value;
-    }
-
-    const V& value() const& {
-      return storage_.value;
-    }
-
-    V&& value() && {
-      return std::move(storage_.value);
-    }
-
-    E& error() & {
-      return storage_.error;
-    }
-
-    const E& error() const& {
-      return storage_.error;
-    }
-
-    E&& error() && {
-      return std::move(storage_.error);
-    }
+    E& error() &;
+    const E& error() const&;
+    E&& error() &&;
 
     template <typename F>
     typename normalize_expected<
       typename std::result_of<F(V&)>::type, V, E
     >::type
-    and_then(F&& func) & {
-      typedef typename std::result_of<F(V&)>::type CallbackResult;
-      typedef typename normalize_expected<CallbackResult, V, E>::type Result;
-
-      static_assert(
-        std::is_same<typename expected_traits<Result>::error_type, E>::value,
-        "and_then callback must return either expected<V, E> or expected<E>"
-      );
-
-      if (has_value_) {
-        return Result{func(storage_.value)};
-      }
-
-      return Result{unexpected<E>(storage_.error)};
-    }
+    and_then(F&& func) &;
 
     template <typename F>
     typename normalize_expected<
       typename std::result_of<F(V&&)>::type, V, E
     >::type
-    and_then(F&& func) && {
-      typedef typename std::result_of<F(V&&)>::type CallbackResult;
-      typedef typename normalize_expected<CallbackResult, V, E>::type Result;
-
-      static_assert(
-        std::is_same<typename expected_traits<Result>::error_type, E>::value,
-        "and_then callback must return either expected<V, E> or expected<E>"
-      );
-
-      if (has_value_) {
-        return Result{func(std::move(storage_.value))};
-      }
-
-      return Result{unexpected<E>(std::move(storage_.error))};
-    }
+    and_then(F&& func) &&;
 
     template <typename F>
     expected<V, E>
-    or_else(F&& func) & {
-      typedef typename std::result_of<F(E&)>::type CallbackResult;
-      typedef typename normalize_expected<CallbackResult, V, E>::type Result;
-
-      static_assert(
-        std::is_same<typename expected_traits<Result>::value_type, V>::value &&
-        std::is_same<typename expected_traits<Result>::error_type, E>::value,
-        "and_then callback must return either expected<V, E> or expected<E>"
-      );
-
-      if (has_value_) {
-        return *this;
-      }
-
-      return Result{func(storage_.error)};
-    }
+    or_else(F&& func) &;
 
     template <typename F>
     expected<V, E>
-    or_else(F&& func) && {
-      typedef typename std::result_of<F(E&&)>::type CallbackResult;
-      typedef typename normalize_expected<CallbackResult, V, E>::type Result;
-
-      static_assert(
-        std::is_same<typename expected_traits<Result>::value_type, V>::value &&
-        std::is_same<typename expected_traits<Result>::error_type, E>::value,
-        "and_then callback must return either expected<V, E> or expected<E>"
-      );
-
-      if (has_value_) {
-        return std::move(*this);
-      }
-
-      return Result{func(std::move(storage_.error))};
-    }
+    or_else(F&& func) &&;
 
     template <typename U, typename std::enable_if<std::is_constructible<V, U>::value, int>::type = 0>
-    V value_or(U&& fallback) & {
-      if (has_value_) {
-        return storage_.value;
-      }
-
-      return V{std::forward<U>(fallback)};
-    }
+    V value_or(U&& fallback) &;
 
     template <typename U, typename std::enable_if<std::is_constructible<V, U>::value, int>::type = 0>
-    V value_or(U&& fallback) && {
-      if (has_value_) {
-        return std::move(storage_.value);
-      }
+    V value_or(U&& fallback) &&;
 
-      return V{std::forward<U>(fallback)};
-    }
+    expected<V, E>& operator=(const expected<V, E>& rhs) noexcept;
+    expected<V, E>& operator=(expected<V, E>&& rhs) noexcept;
 
-    expected<V, E>& operator=(const expected<V, E>& rhs) noexcept {
-      if (this == &rhs) {
-        return *this;
-      }
+    explicit operator bool() const;
 
-      destroy();
+    const V& operator*() const&;
+    V& operator*() &;
 
-      has_value_ = rhs.has_value_;
-      if (has_value_) {
-        new (&storage_.value) V{rhs.storage_.value};
-      } else {
-        new (&storage_.error) E{rhs.storage_.error};
-      }
-
-      return *this;
-    }
-
-    expected<V, E>& operator=(expected<V, E>&& rhs) noexcept {
-      if (this == &rhs) {
-        return *this;
-      }
-
-      destroy();
-
-      has_value_ = rhs.has_value_;
-      if (has_value_) {
-        new (&storage_.value) V{std::move(rhs.storage_.value)};
-      } else {
-        new (&storage_.error) E{std::move(rhs.storage_.error)};
-      }
-
-      return *this;
-    }
-
-    explicit operator bool() const {
-      return has_value_;
-    }
-
-    const V& operator*() const& {
-      return storage_.value;
-    }
-
-    V& operator*() & {
-      return storage_.value;
-    }
-
-    const V* operator->() const& {
-      return &storage_.value;
-    }
-
-    V* operator->() & {
-      return &storage_.value;
-    }
-
+    const V* operator->() const&;
+    V* operator->() &;
 
   private:
     union Storage {
@@ -380,4 +222,254 @@ inline const E& unexpected<E>::error() const& noexcept {
 template <typename E>
 inline E&& unexpected<E>::error() && noexcept {
   return std::move(error_);
+}
+
+//*****************************************************************************
+// template <typename V, typename E>
+// struct expected<T, E>
+//*****************************************************************************
+
+template <typename V, typename E>
+inline expected<V, E>::expected(const V& value) : has_value_{true} {
+  new (&storage_.value) V{value};
+}
+
+template <typename V, typename E>
+inline expected<V, E>::expected(V&& value) : has_value_{true} {
+  new (&storage_.value) V{std::move(value)};
+}
+
+template <typename V, typename E>
+template <typename... Args>
+inline expected<V, E>::expected(Args&&... args) : expected{V{std::forward<Args>(args)...}} {}
+
+template <typename V, typename E>
+inline expected<V, E>::expected(const expected<V, E>& expected) : has_value_{expected.has_value_} {
+  if (has_value_) {
+    new (&storage_.value) V{expected.storage_.value};
+  } else {
+    new (&storage_.error) E{expected.storage_.error};
+  }
+}
+
+template <typename V, typename E>
+inline expected<V, E>::expected(expected<V, E>&& expected) : has_value_{expected.has_value_} {
+  if (has_value_) {
+    new (&storage_.value) V{std::move(expected.storage_.value)};
+  } else {
+    new (&storage_.error) E{std::move(expected.storage_.error)};
+  }
+}
+
+template <typename V, typename E>
+inline expected<V, E>::expected(const unexpected<E>& error) : has_value_{false} {
+  new (&storage_.error) E{error.error()};
+}
+
+template <typename V, typename E>
+inline expected<V, E>::expected(unexpected<E>&& error) : has_value_{false} {
+  new (&storage_.error) E{std::move(error.error())};
+}
+
+template <typename V, typename E>
+inline expected<V, E>::~expected() {
+  destroy();
+}
+
+template <typename V, typename E>
+inline bool expected<V, E>::has_value() const noexcept {
+  return has_value_;
+}
+
+template <typename V, typename E>
+inline V& expected<V, E>::value() & {
+  return storage_.value;
+}
+
+template <typename V, typename E>
+inline const V& expected<V, E>::value() const& {
+  return storage_.value;
+}
+
+template <typename V, typename E>
+inline V&& expected<V, E>::value() && {
+  return std::move(storage_.value);
+}
+
+template <typename V, typename E>
+inline E& expected<V, E>::error() & {
+  return storage_.error;
+}
+
+template <typename V, typename E>
+inline const E& expected<V, E>::error() const& {
+  return storage_.error;
+}
+
+template <typename V, typename E>
+inline E&& expected<V, E>::error() && {
+  return std::move(storage_.error);
+}
+
+template <typename V, typename E>
+template <typename F>
+typename normalize_expected<
+  typename std::result_of<F(V&)>::type, V, E
+>::type
+expected<V, E>::and_then(F&& func) & {
+  typedef typename std::result_of<F(V&)>::type CallbackResult;
+  typedef typename normalize_expected<CallbackResult, V, E>::type Result;
+
+  static_assert(
+    std::is_same<typename expected_traits<Result>::error_type, E>::value,
+    "and_then callback must return either expected<V, E> or expected<E>"
+  );
+
+  if (has_value_) {
+    return Result{func(storage_.value)};
+  }
+
+  return Result{unexpected<E>(storage_.error)};
+}
+
+template <typename V, typename E>
+template <typename F>
+typename normalize_expected<
+  typename std::result_of<F(V&&)>::type, V, E
+>::type
+expected<V, E>::and_then(F&& func) && {
+  typedef typename std::result_of<F(V&&)>::type CallbackResult;
+  typedef typename normalize_expected<CallbackResult, V, E>::type Result;
+
+  static_assert(
+    std::is_same<typename expected_traits<Result>::error_type, E>::value,
+    "and_then callback must return either expected<V, E> or expected<E>"
+  );
+
+  if (has_value_) {
+    return Result{func(std::move(storage_.value))};
+  }
+
+  return Result{unexpected<E>(std::move(storage_.error))};
+}
+
+template <typename V, typename E>
+template <typename F>
+expected<V, E>
+expected<V, E>::or_else(F&& func) & {
+  typedef typename std::result_of<F(E&)>::type CallbackResult;
+  typedef typename normalize_expected<CallbackResult, V, E>::type Result;
+
+  static_assert(
+    std::is_same<typename expected_traits<Result>::value_type, V>::value &&
+    std::is_same<typename expected_traits<Result>::error_type, E>::value,
+    "and_then callback must return either expected<V, E> or expected<E>"
+  );
+
+  if (has_value_) {
+    return *this;
+  }
+
+  return Result{func(storage_.error)};
+}
+
+template <typename V, typename E>
+template <typename F>
+expected<V, E>
+expected<V, E>::or_else(F&& func) && {
+  typedef typename std::result_of<F(E&&)>::type CallbackResult;
+  typedef typename normalize_expected<CallbackResult, V, E>::type Result;
+
+  static_assert(
+    std::is_same<typename expected_traits<Result>::value_type, V>::value &&
+    std::is_same<typename expected_traits<Result>::error_type, E>::value,
+    "and_then callback must return either expected<V, E> or expected<E>"
+  );
+
+  if (has_value_) {
+    return std::move(*this);
+  }
+
+  return Result{func(std::move(storage_.error))};
+}
+
+template <typename V, typename E>
+template <typename U, typename std::enable_if<std::is_constructible<V, U>::value, int>::type>
+inline V expected<V, E>::value_or(U&& fallback) & {
+  if (has_value_) {
+    return storage_.value;
+  }
+
+  return V{std::forward<U>(fallback)};
+}
+
+template <typename V, typename E>
+template <typename U, typename std::enable_if<std::is_constructible<V, U>::value, int>::type>
+inline V expected<V, E>::value_or(U&& fallback) && {
+  if (has_value_) {
+    return std::move(storage_.value);
+  }
+
+  return V{std::forward<U>(fallback)};
+}
+
+template <typename V, typename E>
+inline expected<V, E>& expected<V, E>::operator=(const expected<V, E>& rhs) noexcept {
+  if (this == &rhs) {
+    return *this;
+  }
+
+  destroy();
+
+  has_value_ = rhs.has_value_;
+  if (has_value_) {
+    new (&storage_.value) V{rhs.storage_.value};
+  } else {
+    new (&storage_.error) E{rhs.storage_.error};
+  }
+
+  return *this;
+}
+
+template <typename V, typename E>
+inline expected<V, E>& expected<V, E>::operator=(expected<V, E>&& rhs) noexcept {
+  if (this == &rhs) {
+    return *this;
+  }
+
+  destroy();
+
+  has_value_ = rhs.has_value_;
+  if (has_value_) {
+    new (&storage_.value) V{std::move(rhs.storage_.value)};
+  } else {
+    new (&storage_.error) E{std::move(rhs.storage_.error)};
+  }
+
+  return *this;
+}
+
+template <typename V, typename E>
+inline expected<V, E>::operator bool() const {
+  return has_value_;
+}
+
+template <typename V, typename E>
+inline const V& expected<V, E>::operator*() const& {
+  return storage_.value;
+}
+
+template <typename V, typename E>
+inline V& expected<V, E>::operator*() & {
+  return storage_.value;
+}
+
+template <typename V, typename E>
+inline const V* expected<V, E>::operator->() const& {
+  return &storage_.value;
+}
+
+template <typename V, typename E>
+inline V* expected<V, E>::operator->() & {
+  return &storage_.value;
 }
