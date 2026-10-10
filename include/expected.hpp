@@ -3,47 +3,24 @@
 #include <utility>
 
 template <typename E>
-class unexpected {
+struct unexpected {
   public:
-    explicit unexpected(const E& error) : error_{error} {}
-    explicit unexpected(E&& error) : error_{std::move(error)} {}
-
-    unexpected(const unexpected<E>& error) : error_{error.error_} {}
-    unexpected(unexpected<E>&& error) : error_{std::move(error.error_)} {}
+    explicit unexpected(const E& error);
+    explicit unexpected(E&& error);
+    unexpected(const unexpected<E>& error);
+    unexpected(unexpected<E>&& error);
 
     template <
       typename... Args,
       typename std::enable_if<std::is_constructible<E, Args...>::value, int>::type = 0
     >
-    explicit unexpected(Args&&... args) : unexpected{E{std::forward<Args>(args)...}} {}
+    explicit unexpected(Args&&... args);
 
-    unexpected& operator=(const unexpected<E>& rhs) {
-      if (*this == &rhs) {
-        return *this;
-      }
+    unexpected& operator=(const unexpected<E>& rhs);
+    unexpected& operator=(unexpected<E>&& rhs);
 
-      error_ = rhs.error_;
-
-      return *this;
-    }
-
-    unexpected& operator=(unexpected<E>&& rhs) {
-      if (*this == &rhs) {
-        return *this;
-      }
-
-      error_ = std::move(rhs.error_);
-
-      return *this;
-    }
-
-    const E& error() const& noexcept {
-      return error_;
-    }
-
-    E&& error() && noexcept {
-      return std::move(error_);
-    }
+    const E& error() const& noexcept;
+    E&& error() && noexcept;
 
   private:
     E error_;
@@ -348,3 +325,59 @@ struct error_propagation_traits<expected<V, E>, void> {
     return unexpected<E>{std::forward<E>(e)};
   }
 };
+
+//*****************************************************************************
+// template <typename E>
+// struct unexpected<E>
+//*****************************************************************************
+
+template <typename E>
+inline unexpected<E>::unexpected(const E& error) : error_{error} {}
+
+template <typename E>
+inline unexpected<E>::unexpected(E&& error) : error_{std::move(error)} {}
+
+template <typename E>
+inline unexpected<E>::unexpected(const unexpected<E>& error) : error_{error.error_} {}
+
+template <typename E>
+inline unexpected<E>::unexpected(unexpected<E>&& error) : error_{std::move(error.error_)} {}
+
+template <typename E>
+template <
+  typename... Args,
+  typename std::enable_if<std::is_constructible<E, Args...>::value, int>::type
+>
+inline unexpected<E>::unexpected(Args&&... args) : unexpected{E{std::forward<Args>(args)...}} {}
+
+template <typename E>
+inline unexpected<E>& unexpected<E>::operator=(const unexpected<E>& rhs) {
+  if (*this == &rhs) {
+    return *this;
+  }
+
+  error_ = rhs.error_;
+
+  return *this;
+}
+
+template <typename E>
+inline unexpected<E>& unexpected<E>::operator=(unexpected<E>&& rhs) {
+  if (*this == &rhs) {
+    return *this;
+  }
+
+  error_ = std::move(rhs.error_);
+
+  return *this;
+}
+
+template <typename E>
+inline const E& unexpected<E>::error() const& noexcept {
+  return error_;
+}
+
+template <typename E>
+inline E&& unexpected<E>::error() && noexcept {
+  return std::move(error_);
+}
