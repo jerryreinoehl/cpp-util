@@ -9,39 +9,39 @@ namespace utl {
   template <typename CharT>
   struct char_iterator_base {
     public:
-      inline char_iterator_base();
-      inline explicit char_iterator_base(CharT* p);
+      char_iterator_base();
+      explicit char_iterator_base(CharT* p);
       char_iterator_base(const char_iterator_base<CharT>& other) = default;
 
-      inline char_iterator_base<CharT>& operator=(const char_iterator_base<CharT>& other) = default;
+      char_iterator_base<CharT>& operator=(const char_iterator_base<CharT>& other) = default;
 
       // Returns a reference ot the `CharT` the iterator currently points to.
-      inline CharT& operator*() noexcept;
+      CharT& operator*() noexcept;
 
       // Advances the iterator only if it does not point to a null char.
-      inline char_iterator_base<CharT>& operator++() noexcept;
-      inline char_iterator_base<CharT> operator++(int) noexcept;
+      char_iterator_base<CharT>& operator++() noexcept;
+      char_iterator_base<CharT> operator++(int) noexcept;
 
       // Two `char_iterator_base`'s are equivalent if they point to the same
       // memory location.
-      inline bool operator==(char_iterator_base<CharT> other) const noexcept;
-      inline bool operator!=(char_iterator_base<CharT> other) const noexcept;
+      bool operator==(char_iterator_base<CharT> other) const noexcept;
+      bool operator!=(char_iterator_base<CharT> other) const noexcept;
 
       // Converts to `false` if the iterator points to a null char '\0', and
       // `true` otherwise.
-      inline operator bool() const noexcept;
+      operator bool() const noexcept;
 
       // Convert the iterator to a string starting from its current position
       // and ending at the next null char, or ending at another iterator,
       // `end`.
-      inline std::string to_string() const;
-      inline std::string to_string(char_iterator_base<CharT> end) const;
+      std::string to_string() const;
+      std::string to_string(char_iterator_base<CharT> end) const;
 
       // Advance the iterator until it matches a `CharT` `c`, the `CharT`
       // sequence `cp`, or while the function `func` returns `true`.
-      inline char_iterator_base<CharT> seek(CharT c) noexcept;
-      inline char_iterator_base<CharT> seek(CharT *cp) noexcept;
-      inline char_iterator_base<CharT> seek(std::function<bool(CharT)> func);
+      char_iterator_base<CharT> seek(CharT c) noexcept;
+      char_iterator_base<CharT> seek(CharT *cp) noexcept;
+      char_iterator_base<CharT> seek(std::function<bool(CharT)> func);
 
       // Return `true` if the next sequence of `CharT`'s the iterator points to
       // is equivalent to `cp`.
