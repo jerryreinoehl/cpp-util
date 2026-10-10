@@ -16,7 +16,7 @@ namespace utl {
       char_iterator_base<CharT>& operator=(const char_iterator_base<CharT>& other) = default;
 
       // Returns a reference ot the `CharT` the iterator currently points to.
-      CharT& operator*() noexcept;
+      CharT& operator*() const noexcept;
 
       // Advances the iterator only if it does not point to a null char.
       char_iterator_base<CharT>& operator++() noexcept;
@@ -68,7 +68,7 @@ template <typename CharT>
 inline utl::char_iterator_base<CharT>::char_iterator_base(CharT* p) : p_{p} {}
 
 template <typename CharT>
-inline CharT& utl::char_iterator_base<CharT>::operator*() noexcept {
+inline CharT& utl::char_iterator_base<CharT>::operator*() const noexcept {
   return *p_;
 }
 
