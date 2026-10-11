@@ -64,7 +64,10 @@ class expected {
     expected(const V& value);
     expected(V&& value);
 
-    template <typename... Args>
+    template <
+      typename... Args,
+      typename std::enable_if<std::is_constructible<V, Args...>::value, int>::type = 0
+    >
     expected(Args&&... args);
 
     expected(const expected<V, E>& expected);
@@ -240,7 +243,10 @@ inline expected<V, E>::expected(V&& value) : has_value_{true} {
 }
 
 template <typename V, typename E>
-template <typename... Args>
+template <
+  typename... Args,
+  typename std::enable_if<std::is_constructible<V, Args...>::value, int>::type
+>
 inline expected<V, E>::expected(Args&&... args) : expected{V{std::forward<Args>(args)...}} {}
 
 template <typename V, typename E>
