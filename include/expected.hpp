@@ -78,6 +78,12 @@ class expected {
 
     ~expected();
 
+    template <
+      typename... Args,
+      typename std::enable_if<std::is_constructible<V, Args...>::value, int>::type = 0
+    >
+    V& emplace(Args&&... args);
+
     bool has_value() const noexcept;
 
     V& value() &;
@@ -280,6 +286,18 @@ inline expected<V, E>::expected(unexpected<E>&& error) : has_value_{false} {
 template <typename V, typename E>
 inline expected<V, E>::~expected() {
   destroy();
+}
+
+template <typename V, typename E>
+template <
+  typename... Args,
+  typename std::enable_if<std::is_constructible<V, Args...>::value, int>::type
+>
+inline V& expected<V, E>::emplace(Args&&... args) {
+  destroy();
+  has_value_ = true;
+  new (&storage_.value) V{std::forward<Args>(args)...};
+  return storage_.value;
 }
 
 template <typename V, typename E>
