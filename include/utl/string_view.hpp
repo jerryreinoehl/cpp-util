@@ -17,6 +17,8 @@ namespace utl {
 
       constexpr const char *data() const noexcept;
 
+      explicit operator std::string() const;
+
     private:
       const char *data_;
   };
@@ -48,4 +50,8 @@ constexpr bool utl::string_view::operator<(utl::string_view other) const noexcep
 
 constexpr const char* utl::string_view::data() const noexcept {
   return data_;
+}
+
+inline utl::string_view::operator std::string() const {
+  return std::string{data_};
 }
