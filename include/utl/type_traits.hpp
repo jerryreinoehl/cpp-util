@@ -16,7 +16,7 @@ namespace utl {
   // Obtains the base type of `T`, without const, volatile, references, or pointers.
   template <typename T>
   struct base_type {
-    using type = typename std::remove_pointer<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::type;
+    using type = typename std::remove_cv<typename std::remove_reference<typename std::remove_pointer<T>::type>::type>::type;
   };
 
   template <typename T>
