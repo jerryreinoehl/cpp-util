@@ -17,13 +17,13 @@ namespace utl {
       const char *data_;
   };
 
-}
+  std::ostream& operator<<(std::ostream& out, utl::string_view s);
 
-std::ostream& operator<<(std::ostream& out, utl::string_view s);
+}
 
 //*****************************************************************************
 
-inline std::ostream& operator<<(std::ostream& out, utl::string_view s) {
+inline std::ostream& utl::operator<<(std::ostream& out, utl::string_view s) {
   return out << s.data();
 }
 
