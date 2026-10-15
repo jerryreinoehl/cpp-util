@@ -26,7 +26,7 @@ namespace utl {
   using is_pointer = std::is_pointer<T>;
 
   template <typename T>
-  constexpr bool is_pointer_v = is_pointer<T>::value;
+  constexpr bool is_pointer_v() { return is_pointer<T>::value; }
 
   template <bool B, typename T = void>
   using enable_if = std::enable_if<B, T>;
