@@ -138,7 +138,7 @@ class expected {
 
       Storage() {}
       ~Storage() {}
-    } storage_;
+    } storage_{};
 
     bool has_value_{false};
 
