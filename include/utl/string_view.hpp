@@ -13,8 +13,8 @@ namespace utl {
 
       string_view& operator=(const string_view& other) = default;
 
-      constexpr bool operator==(string_view other) const noexcept;
-      constexpr bool operator<(string_view other) const noexcept;
+      bool operator==(string_view other) const noexcept;
+      bool operator<(string_view other) const noexcept;
       constexpr const char& operator[](size_t idx) const noexcept;
 
       constexpr const char *data() const noexcept;
@@ -44,13 +44,13 @@ constexpr utl::string_view::string_view(const char *s) noexcept : data_{s} {}
 
 inline utl::string_view::string_view(const std::string& s) noexcept : data_{s.c_str()} {}
 
-constexpr bool utl::string_view::operator==(utl::string_view other) const noexcept {
+inline bool utl::string_view::operator==(utl::string_view other) const noexcept {
   const char *p{data_}, *q{other.data_};
   for (; *p && *q && *p == *q; ++p, ++q);
   return *p == *q;
 }
 
-constexpr bool utl::string_view::operator<(utl::string_view other) const noexcept {
+inline bool utl::string_view::operator<(utl::string_view other) const noexcept {
   const char *p{data_}, *q{other.data_};
   for (; *p && *q && *p == *q; ++p, ++q);
   return *p < *q;
