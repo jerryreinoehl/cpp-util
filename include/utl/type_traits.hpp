@@ -22,4 +22,9 @@ namespace utl {
   template <typename T>
   using base_type_t = typename base_type<T>::type;
 
+  template <typename T>
+  using is_pointer = std::is_pointer<T>;
+
+  template <typename T>
+  constexpr bool is_pointer_v = is_pointer<T>::value;
 };
