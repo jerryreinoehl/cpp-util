@@ -138,6 +138,9 @@ class expected {
 
       Storage() {}
       ~Storage() {}
+
+      Storage(const Storage&) = delete;
+      Storage& operator=(const Storage&) = delete;
     } storage_{};
 
     bool has_value_{false};
