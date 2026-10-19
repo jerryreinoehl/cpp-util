@@ -43,6 +43,8 @@ namespace utl {
       template <typename T>
       static T cast(any&& any);
 
+      any() noexcept;
+
       template <typename T>
       any(const T& t);
 
@@ -87,6 +89,8 @@ inline T utl::any::cast(any&& any) {
   assert(typeid(T) == any.type());
   return T{std::move(*static_cast<T*>(any.data_))};
 }
+
+inline utl::any::any() noexcept : data_{}, manager_{} {}
 
 template <typename T>
 inline utl::any::any(const T& t) : manager_{any_manager<T>} {
