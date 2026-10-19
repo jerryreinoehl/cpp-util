@@ -58,6 +58,8 @@ namespace utl {
 
       const std::type_info& type() const noexcept;
 
+      bool has_value() const noexcept;
+
     private:
       void *data_{};
       void (*manager_)(manager_op, void *, void **, const void**);
@@ -142,4 +144,8 @@ inline const std::type_info& utl::any::type() const noexcept {
   const void *info;
   manager_(manager_op::TypeInfo, nullptr, nullptr, &info);
   return *static_cast<const std::type_info*>(info);
+}
+
+inline bool utl::any::has_value() const noexcept {
+  return data_ != nullptr;
 }
