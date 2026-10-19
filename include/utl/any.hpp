@@ -12,26 +12,6 @@ namespace utl {
     TypeInfo,
   };
 
-  struct any_traits_base {
-    virtual const std::type_info& type_info() = 0;
-  };
-
-  template <typename T>
-  struct any_traits : any_traits_base {
-    static void cheese() {
-      std::cout << "cheese\n";
-    }
-
-    static any_traits& get() {
-      static any_traits<T> traits{};
-      return traits;
-    }
-
-    const std::type_info& type_info() {
-      return typeid(T);
-    }
-  };
-
   template <typename T>
   void any_manager(manager_op op, void *a, void **b, const void **c) {
     switch (op) {
@@ -75,7 +55,6 @@ namespace utl {
       any(const T& t) : manager_{any_manager<T>} {
         data_ = new T{t};
         std::cout << "Allocating new any<" << typeid(T).name() << "> @" << data_ << '\n';
-        //traits_ = &any_traits<T>::get();
       }
 
       any(const any& other) : manager_{other.manager_} {
@@ -122,13 +101,11 @@ namespace utl {
         const void *info;
         manager_(manager_op::TypeInfo, nullptr, nullptr, &info);
         return *static_cast<const std::type_info*>(info);
-        //return traits_->type_info();
       }
 
     private:
       void *data_{};
       void (*manager_)(manager_op, void *, void **, const void**);
-      //any_traits_base *traits_{};
 
   };
 
