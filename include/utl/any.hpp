@@ -35,73 +35,28 @@ namespace utl {
     public:
       template <typename T, typename... Args>
       typename std::enable_if<std::is_constructible<T, Args...>::value, any>::type
-      static make(Args... args) {
-        return any{T{std::forward<Args>(args)...}};
-      }
+      static make(Args... args);
 
       template <typename T>
-      static T& cast(const any& any) {
-        assert(typeid(T) == any.type());
-        return *static_cast<T*>(any.data_);
-      }
+      static T& cast(const any& any);
 
       template <typename T>
-      static T cast(any&& any) {
-        assert(typeid(T) == any.type());
-        return T{std::move(*static_cast<T*>(any.data_))};
-      }
+      static T cast(any&& any);
 
       template <typename T>
-      any(const T& t) : manager_{any_manager<T>} {
-        data_ = new T{t};
-        std::cout << "Allocating new any<" << typeid(T).name() << "> @" << data_ << '\n';
-      }
+      any(const T& t);
 
-      any(const any& other) : manager_{other.manager_} {
-        std::cout << "In copy ctor\n";
-        other.manager_(manager_op::Clone, other.data_, &data_, nullptr);
-      }
+      any(const any& other);
 
-      any(any&& other) : data_{other.data_}, manager_{other.manager_} {
-        std::cout << "In move ctor\n";
-        other.data_ = nullptr;
-      }
+      any(any&& other);
 
-      any& operator=(const any& other) {
-        if (this == &other) {
-          return *this;
-        }
+      any& operator=(const any& other);
 
-        manager_(manager_op::Delete, data_, nullptr, nullptr);
-        other.manager_(manager_op::Clone, other.data_, &data_, nullptr);
-        manager_ = other.manager_;
+      any& operator=(any&& other);
 
-        return *this;
-      }
+      ~any();
 
-      any& operator=(any&& other) {
-        if (this == &other) {
-          return *this;
-        }
-
-        manager_(manager_op::Delete, data_, nullptr, nullptr);
-        data_ = other.data_;
-        manager_ = other.manager_;
-        other.data_ = nullptr;
-
-        return *this;
-      }
-
-      ~any() {
-        std::cout << "In dtor\n";
-        manager_(manager_op::Delete, data_, nullptr, nullptr);
-      }
-
-      const std::type_info& type() const noexcept {
-        const void *info;
-        manager_(manager_op::TypeInfo, nullptr, nullptr, &info);
-        return *static_cast<const std::type_info*>(info);
-      }
+      const std::type_info& type() const noexcept;
 
     private:
       void *data_{};
@@ -109,4 +64,78 @@ namespace utl {
 
   };
 
+}
+
+//*****************************************************************************
+// struct utl::any
+//*****************************************************************************
+
+template <typename T, typename... Args>
+typename std::enable_if<std::is_constructible<T, Args...>::value, utl::any>::type
+inline utl::any::make(Args... args) {
+  return any{T{std::forward<Args>(args)...}};
+}
+
+template <typename T>
+inline T& utl::any::cast(const any& any) {
+  assert(typeid(T) == any.type());
+  return *static_cast<T*>(any.data_);
+}
+
+template <typename T>
+inline T utl::any::cast(any&& any) {
+  assert(typeid(T) == any.type());
+  return T{std::move(*static_cast<T*>(any.data_))};
+}
+
+template <typename T>
+inline utl::any::any(const T& t) : manager_{any_manager<T>} {
+  data_ = new T{t};
+  std::cout << "Allocating new any<" << typeid(T).name() << "> @" << data_ << '\n';
+}
+
+inline utl::any::any(const any& other) : manager_{other.manager_} {
+  std::cout << "In copy ctor\n";
+  other.manager_(manager_op::Clone, other.data_, &data_, nullptr);
+}
+
+inline utl::any::any(any&& other) : data_{other.data_}, manager_{other.manager_} {
+  std::cout << "In move ctor\n";
+  other.data_ = nullptr;
+}
+
+inline utl::any& utl::any::operator=(const any& other) {
+  if (this == &other) {
+    return *this;
+  }
+
+  manager_(manager_op::Delete, data_, nullptr, nullptr);
+  other.manager_(manager_op::Clone, other.data_, &data_, nullptr);
+  manager_ = other.manager_;
+
+  return *this;
+}
+
+inline utl::any& utl::any::operator=(any&& other) {
+  if (this == &other) {
+    return *this;
+  }
+
+  manager_(manager_op::Delete, data_, nullptr, nullptr);
+  data_ = other.data_;
+  manager_ = other.manager_;
+  other.data_ = nullptr;
+
+  return *this;
+}
+
+inline utl::any::~any() {
+  std::cout << "In dtor\n";
+  manager_(manager_op::Delete, data_, nullptr, nullptr);
+}
+
+inline const std::type_info& utl::any::type() const noexcept {
+  const void *info;
+  manager_(manager_op::TypeInfo, nullptr, nullptr, &info);
+  return *static_cast<const std::type_info*>(info);
 }
