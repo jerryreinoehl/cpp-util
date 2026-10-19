@@ -56,6 +56,10 @@ namespace utl {
 
       ~any() noexcept;
 
+      template <typename T, typename... Args>
+      typename std::enable_if<std::is_constructible<T, Args...>::value, typename std::decay<T>::type&>::type
+      emplace(Args... args);
+
       const std::type_info& type() const noexcept;
 
       bool has_value() const noexcept;
@@ -137,7 +141,21 @@ inline utl::any::~any() noexcept {
   std::cout << "In dtor\n";
   if (data_ != nullptr) {
     manager_(manager_op::Delete, data_, nullptr, nullptr);
+    data_ = nullptr;
   }
+}
+
+template <typename T, typename... Args>
+typename std::enable_if<std::is_constructible<T, Args...>::value, typename std::decay<T>::type&>::type
+inline utl::any::emplace(Args... args) {
+  if (data_ != nullptr) {
+    manager_(manager_op::Delete, data_, nullptr, nullptr);
+  }
+
+  manager_ = any_manager<T>;
+  data_ = new T{std::forward<Args>(args)...};
+
+  return *static_cast<T*>(data_);
 }
 
 inline const std::type_info& utl::any::type() const noexcept {
