@@ -60,6 +60,8 @@ namespace utl {
       typename std::enable_if<std::is_constructible<T, Args...>::value, typename std::decay<T>::type&>::type
       emplace(Args... args);
 
+      void reset() noexcept;
+
       const std::type_info& type() const noexcept;
 
       bool has_value() const noexcept;
@@ -156,6 +158,10 @@ inline utl::any::emplace(Args... args) {
   data_ = new T{std::forward<Args>(args)...};
 
   return *static_cast<T*>(data_);
+}
+
+inline void utl::any::reset() noexcept {
+  this->~any();
 }
 
 inline const std::type_info& utl::any::type() const noexcept {
