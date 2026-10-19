@@ -48,13 +48,13 @@ namespace utl {
 
       any(const any& other);
 
-      any(any&& other);
+      any(any&& other) noexcept ;
 
       any& operator=(const any& other);
 
-      any& operator=(any&& other);
+      any& operator=(any&& other) noexcept;
 
-      ~any();
+      ~any() noexcept;
 
       const std::type_info& type() const noexcept;
 
@@ -103,7 +103,7 @@ inline utl::any::any(const any& other) : manager_{other.manager_} {
   other.manager_(manager_op::Clone, other.data_, &data_, nullptr);
 }
 
-inline utl::any::any(any&& other) : data_{other.data_}, manager_{other.manager_} {
+inline utl::any::any(any&& other) noexcept : data_{other.data_}, manager_{other.manager_} {
   std::cout << "In move ctor\n";
   other.data_ = nullptr;
 }
@@ -120,7 +120,7 @@ inline utl::any& utl::any::operator=(const any& other) {
   return *this;
 }
 
-inline utl::any& utl::any::operator=(any&& other) {
+inline utl::any& utl::any::operator=(any&& other) noexcept {
   if (this == &other) {
     return *this;
   }
@@ -133,7 +133,7 @@ inline utl::any& utl::any::operator=(any&& other) {
   return *this;
 }
 
-inline utl::any::~any() {
+inline utl::any::~any() noexcept {
   std::cout << "In dtor\n";
   if (data_ != nullptr) {
     manager_(manager_op::Delete, data_, nullptr, nullptr);
