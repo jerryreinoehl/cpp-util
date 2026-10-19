@@ -16,10 +16,8 @@ namespace utl {
   void any_manager(manager_op op, void *a, void **b, const void **c) {
     switch (op) {
       case manager_op::Delete:
-        if (a != nullptr) {
-          std::cout << "Deleting any<" << typeid(T).name() << "> @" << a << '\n';
-          delete static_cast<T*>(a);
-        }
+        std::cout << "Deleting any<" << typeid(T).name() << "> @" << a << '\n';
+        delete static_cast<T*>(a);
         break;
       case manager_op::Clone:
         *b = new T{*static_cast<T*>(a)};
@@ -135,7 +133,9 @@ inline utl::any& utl::any::operator=(any&& other) {
 
 inline utl::any::~any() {
   std::cout << "In dtor\n";
-  manager_(manager_op::Delete, data_, nullptr, nullptr);
+  if (data_ != nullptr) {
+    manager_(manager_op::Delete, data_, nullptr, nullptr);
+  }
 }
 
 inline const std::type_info& utl::any::type() const noexcept {
