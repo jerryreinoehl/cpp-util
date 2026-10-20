@@ -85,15 +85,15 @@ namespace utl {
 
   };
 
-  template <typename T, typename std::enable_if<!any::is_small_object<T>::value, int>::type = 0>
+  template <typename T, any::small_object_optimization_t<T, false, int> = 0>
   void any_manager(manager_op op, void *a, void **b, const void **c);
 
-  template <typename T, typename std::enable_if<any::is_small_object<T>::value, int>::type = 0>
+  template <typename T, any::small_object_optimization_t<T, true, int> = 0>
   void any_manager(manager_op op, void *a, void **b, const void **c);
 
 }
 
-template <typename T, typename std::enable_if<!utl::any::is_small_object<T>::value, int>::type>
+template <typename T, utl::any::small_object_optimization_t<T, false, int>>
 void utl::any_manager(utl::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
     case utl::manager_op::Delete:
@@ -110,7 +110,7 @@ void utl::any_manager(utl::manager_op op, void *a, void **b, const void **c) {
   }
 }
 
-template <typename T, typename std::enable_if<utl::any::is_small_object<T>::value, int>::type>
+template <typename T, utl::any::small_object_optimization_t<T, true, int>>
 void utl::any_manager(utl::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
     case utl::manager_op::Delete:
