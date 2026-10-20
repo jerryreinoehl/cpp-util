@@ -244,6 +244,7 @@ inline utl::any::~any() noexcept {
   }
 }
 
+// TODO: need to implement for SOO.
 template <typename T, typename... Args>
 typename std::enable_if<std::is_constructible<T, Args...>::value, typename std::decay<T>::type&>::type
 inline utl::any::emplace(Args... args) {
