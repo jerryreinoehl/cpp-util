@@ -17,40 +17,46 @@ namespace utl {
       template <typename T>
       using is_small_object = std::integral_constant<bool, sizeof(T) <= sizeof(void*) && alignof(T) <= alignof(void*)>;
 
+      template <typename T, bool B, typename U>
+      using small_object_optimization = std::enable_if<is_small_object<T>::value == B, U>;
+
+      template <typename T, bool B, typename U>
+      using small_object_optimization_t = typename small_object_optimization<T, B, U>::type;
+
       template <typename T, typename... Args>
       typename std::enable_if<std::is_constructible<T, Args...>::value, any>::type
       static make(Args... args);
 
       template <typename T>
-      typename std::enable_if<is_small_object<T>::value, const typename std::decay<T>::type&>::type
+      small_object_optimization_t<T, true, const typename std::decay<T>::type&>
       static cast(const any& any);
 
       template <typename T>
-      typename std::enable_if<!is_small_object<T>::value, const typename std::decay<T>::type&>::type
+      small_object_optimization_t<T, false, const typename std::decay<T>::type&>
       static cast(const any& any);
 
       template <typename T>
-      typename std::enable_if<is_small_object<T>::value, typename std::decay<T>::type&>::type
+      small_object_optimization_t<T, true, typename std::decay<T>::type&>
       static cast(any& any);
 
       template <typename T>
-      typename std::enable_if<!is_small_object<T>::value, typename std::decay<T>::type&>::type
+      small_object_optimization_t<T, false, typename std::decay<T>::type&>
       static cast(any& any);
 
       template <typename T>
-      typename std::enable_if<is_small_object<T>::value, typename std::decay<T>::type>::type
+      small_object_optimization_t<T, true, typename std::decay<T>::type>
       static cast(any&& any);
 
       template <typename T>
-      typename std::enable_if<!is_small_object<T>::value, typename std::decay<T>::type>::type
+      small_object_optimization_t<T, false, typename std::decay<T>::type>
       static cast(any&& any);
 
       any() noexcept;
 
-      template <typename T, typename std::enable_if<is_small_object<T>::value, int>::type = 0>
+      template <typename T, small_object_optimization_t<T, true, int> = 0>
       any(const T& t);
 
-      template <typename T, typename std::enable_if<!is_small_object<T>::value, int>::type = 0>
+      template <typename T, small_object_optimization_t<T, false, int> = 0>
       any(const T& t);
 
       any(const any& other);
@@ -132,42 +138,42 @@ inline utl::any::make(Args... args) {
 }
 
 template <typename T>
-typename std::enable_if<utl::any::is_small_object<T>::value, const typename std::decay<T>::type&>::type
+utl::any::small_object_optimization_t<T, true, const typename std::decay<T>::type&>
 inline utl::any::cast(const any& any) {
   assert(typeid(T) == any.type());
   return *reinterpret_cast<const T*>(&any.data_);
 }
 
 template <typename T>
-typename std::enable_if<!utl::any::is_small_object<T>::value, const typename std::decay<T>::type&>::type
+utl::any::small_object_optimization_t<T, false, const typename std::decay<T>::type&>
 inline utl::any::cast(const any& any) {
   assert(typeid(T) == any.type());
   return *static_cast<T*>(any.data_);
 }
 
 template <typename T>
-typename std::enable_if<utl::any::is_small_object<T>::value, typename std::decay<T>::type&>::type
+utl::any::small_object_optimization_t<T, true, typename std::decay<T>::type&>
 inline utl::any::cast(any& any) {
   assert(typeid(T) == any.type());
   return *reinterpret_cast<T*>(&any.data_);
 }
 
 template <typename T>
-typename std::enable_if<!utl::any::is_small_object<T>::value, typename std::decay<T>::type&>::type
+utl::any::small_object_optimization_t<T, false, typename std::decay<T>::type&>
 inline utl::any::cast(any& any) {
   assert(typeid(T) == any.type());
   return *static_cast<T*>(any.data_);
 }
 
 template <typename T>
-typename std::enable_if<utl::any::is_small_object<T>::value, typename std::decay<T>::type>::type
+utl::any::small_object_optimization_t<T, true, typename std::decay<T>::type>
 inline utl::any::cast(any&& any) {
   assert(typeid(T) == any.type());
   return T{std::move(*reinterpret_cast<T*>(&any.data_))};
 }
 
 template <typename T>
-typename std::enable_if<!utl::any::is_small_object<T>::value, typename std::decay<T>::type>::type
+utl::any::small_object_optimization_t<T, false, typename std::decay<T>::type>
 inline utl::any::cast(any&& any) {
   assert(typeid(T) == any.type());
   return T{std::move(*static_cast<T*>(any.data_))};
@@ -175,14 +181,14 @@ inline utl::any::cast(any&& any) {
 
 inline utl::any::any() noexcept : data_{}, manager_{} {}
 
-template <typename T, typename std::enable_if<utl::any::is_small_object<T>::value, int>::type>
+template <typename T, utl::any::small_object_optimization_t<T, true, int>>
 inline utl::any::any(const T& t) : manager_{any_manager<T>} {
   std::cout << "SOO available\n";
   new (&data_) T{t};
   std::cout << "data_ = " << data_ << '\n';
 }
 
-template <typename T, typename std::enable_if<!utl::any::is_small_object<T>::value, int>::type>
+template <typename T, utl::any::small_object_optimization_t<T, false, int>>
 inline utl::any::any(const T& t) : manager_{any_manager<T>} {
   data_ = new T{t};
   std::cout << "Allocating new any<" << typeid(T).name() << "> @" << data_ << '\n';
