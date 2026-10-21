@@ -124,40 +124,6 @@ namespace utl {
 
 }
 
-template <typename T, utl::any::alloc_impl_t<T, int>>
-void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
-  switch (op) {
-    case utl::any::manager_op::del:
-      std::cout << "Deleting any<" << typeid(T).name() << "> @" << a << '\n';
-      delete static_cast<T*>(a);
-      break;
-    case utl::any::manager_op::clone:
-      *b = new T{*static_cast<T*>(a)};
-      std::cout << "Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
-      break;
-    case utl::any::manager_op::type_info:
-      *c = &typeid(T);
-      break;
-  }
-}
-
-template <typename T, utl::any::small_object_impl_t<T, int>>
-void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
-  switch (op) {
-    case utl::any::manager_op::del:
-      std::cout << "SOO Deleting any<" << typeid(T).name() << "> @" << a << '\n';
-      reinterpret_cast<T*>(&a)->~T();
-      break;
-    case utl::any::manager_op::clone:
-      std::cout << "SOO Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
-      new (b) T{*reinterpret_cast<T*>(&a)};
-      break;
-    case utl::any::manager_op::type_info:
-      *c = &typeid(T);
-      break;
-  }
-}
-
 //*****************************************************************************
 // struct utl::any
 //*****************************************************************************
@@ -330,3 +296,38 @@ template <typename T>
 inline bool utl::any::is() const noexcept {
   return has_value() && (type() == typeid(T));
 }
+
+template <typename T, utl::any::alloc_impl_t<T, int>>
+void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
+  switch (op) {
+    case utl::any::manager_op::del:
+      std::cout << "Deleting any<" << typeid(T).name() << "> @" << a << '\n';
+      delete static_cast<T*>(a);
+      break;
+    case utl::any::manager_op::clone:
+      *b = new T{*static_cast<T*>(a)};
+      std::cout << "Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
+      break;
+    case utl::any::manager_op::type_info:
+      *c = &typeid(T);
+      break;
+  }
+}
+
+template <typename T, utl::any::small_object_impl_t<T, int>>
+void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
+  switch (op) {
+    case utl::any::manager_op::del:
+      std::cout << "SOO Deleting any<" << typeid(T).name() << "> @" << a << '\n';
+      reinterpret_cast<T*>(&a)->~T();
+      break;
+    case utl::any::manager_op::clone:
+      std::cout << "SOO Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
+      new (b) T{*reinterpret_cast<T*>(&a)};
+      break;
+    case utl::any::manager_op::type_info:
+      *c = &typeid(T);
+      break;
+  }
+}
+
