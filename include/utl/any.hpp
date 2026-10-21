@@ -17,46 +17,55 @@ namespace utl {
       template <typename T>
       using is_small_object = std::integral_constant<bool, sizeof(T) <= sizeof(void*) && alignof(T) <= alignof(void*)>;
 
-      template <typename T, bool B, typename U>
-      using small_object_optimization = std::enable_if<is_small_object<T>::value == B, U>;
+      template <typename T, typename U>
+      using small_object_impl = std::enable_if<is_small_object<T>::value, U>;
 
-      template <typename T, bool B, typename U>
-      using small_object_optimization_t = typename small_object_optimization<T, B, U>::type;
+      template <typename T, typename U>
+      using small_object_impl_t = typename small_object_impl<T, U>::type;
+
+      template <typename T, typename U>
+      using alloc_impl = std::enable_if<!is_small_object<T>::value, U>;
+
+      template <typename T, typename U>
+      using alloc_impl_t = typename alloc_impl<T, U>::type;
+
+      template <typename T>
+      using decay_t = typename std::decay<T>::type;
 
       template <typename T, typename... Args>
       typename std::enable_if<std::is_constructible<T, Args...>::value, any>::type
       static make(Args... args);
 
       template <typename T>
-      small_object_optimization_t<T, true, const typename std::decay<T>::type&>
+      small_object_impl_t<T, const decay_t<T>&>
       static cast(const any& any);
 
       template <typename T>
-      small_object_optimization_t<T, false, const typename std::decay<T>::type&>
+      alloc_impl_t<T, const decay_t<T>&>
       static cast(const any& any);
 
       template <typename T>
-      small_object_optimization_t<T, true, typename std::decay<T>::type&>
+      small_object_impl_t<T, decay_t<T>&>
       static cast(any& any);
 
       template <typename T>
-      small_object_optimization_t<T, false, typename std::decay<T>::type&>
+      alloc_impl_t<T, decay_t<T>&>
       static cast(any& any);
 
       template <typename T>
-      small_object_optimization_t<T, true, typename std::decay<T>::type>
+      small_object_impl_t<T, decay_t<T>>
       static cast(any&& any);
 
       template <typename T>
-      small_object_optimization_t<T, false, typename std::decay<T>::type>
+      alloc_impl_t<T, decay_t<T>>
       static cast(any&& any);
 
       any() noexcept;
 
-      template <typename T, small_object_optimization_t<T, true, int> = 0>
+      template <typename T, small_object_impl_t<T, int> = 0>
       any(const T& t);
 
-      template <typename T, small_object_optimization_t<T, false, int> = 0>
+      template <typename T, alloc_impl_t<T, int> = 0>
       any(const T& t);
 
       any(const any& other);
@@ -85,15 +94,15 @@ namespace utl {
 
   };
 
-  template <typename T, any::small_object_optimization_t<T, false, int> = 0>
+  template <typename T, any::alloc_impl_t<T, int> = 0>
   void any_manager(manager_op op, void *a, void **b, const void **c);
 
-  template <typename T, any::small_object_optimization_t<T, true, int> = 0>
+  template <typename T, any::small_object_impl_t<T, int> = 0>
   void any_manager(manager_op op, void *a, void **b, const void **c);
 
 }
 
-template <typename T, utl::any::small_object_optimization_t<T, false, int>>
+template <typename T, utl::any::alloc_impl_t<T, int>>
 void utl::any_manager(utl::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
     case utl::manager_op::Delete:
@@ -110,7 +119,7 @@ void utl::any_manager(utl::manager_op op, void *a, void **b, const void **c) {
   }
 }
 
-template <typename T, utl::any::small_object_optimization_t<T, true, int>>
+template <typename T, utl::any::small_object_impl_t<T, int>>
 void utl::any_manager(utl::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
     case utl::manager_op::Delete:
@@ -138,42 +147,42 @@ inline utl::any::make(Args... args) {
 }
 
 template <typename T>
-utl::any::small_object_optimization_t<T, true, const typename std::decay<T>::type&>
+utl::any::small_object_impl_t<T, const utl::any::decay_t<T>&>
 inline utl::any::cast(const any& any) {
   assert(typeid(T) == any.type());
   return *reinterpret_cast<const T*>(&any.data_);
 }
 
 template <typename T>
-utl::any::small_object_optimization_t<T, false, const typename std::decay<T>::type&>
+utl::any::alloc_impl_t<T, const utl::any::decay_t<T>&>
 inline utl::any::cast(const any& any) {
   assert(typeid(T) == any.type());
   return *static_cast<T*>(any.data_);
 }
 
 template <typename T>
-utl::any::small_object_optimization_t<T, true, typename std::decay<T>::type&>
+utl::any::small_object_impl_t<T, utl::any::decay_t<T>&>
 inline utl::any::cast(any& any) {
   assert(typeid(T) == any.type());
   return *reinterpret_cast<T*>(&any.data_);
 }
 
 template <typename T>
-utl::any::small_object_optimization_t<T, false, typename std::decay<T>::type&>
+utl::any::alloc_impl_t<T, utl::any::decay_t<T>&>
 inline utl::any::cast(any& any) {
   assert(typeid(T) == any.type());
   return *static_cast<T*>(any.data_);
 }
 
 template <typename T>
-utl::any::small_object_optimization_t<T, true, typename std::decay<T>::type>
+utl::any::small_object_impl_t<T, utl::any::decay_t<T>>
 inline utl::any::cast(any&& any) {
   assert(typeid(T) == any.type());
   return T{std::move(*reinterpret_cast<T*>(&any.data_))};
 }
 
 template <typename T>
-utl::any::small_object_optimization_t<T, false, typename std::decay<T>::type>
+utl::any::alloc_impl_t<T, utl::any::decay_t<T>>
 inline utl::any::cast(any&& any) {
   assert(typeid(T) == any.type());
   return T{std::move(*static_cast<T*>(any.data_))};
@@ -181,14 +190,14 @@ inline utl::any::cast(any&& any) {
 
 inline utl::any::any() noexcept : data_{}, manager_{} {}
 
-template <typename T, utl::any::small_object_optimization_t<T, true, int>>
+template <typename T, utl::any::small_object_impl_t<T, int>>
 inline utl::any::any(const T& t) : manager_{any_manager<T>} {
   std::cout << "SOO available\n";
   new (&data_) T{t};
   std::cout << "data_ = " << data_ << '\n';
 }
 
-template <typename T, utl::any::small_object_optimization_t<T, false, int>>
+template <typename T, utl::any::alloc_impl_t<T, int>>
 inline utl::any::any(const T& t) : manager_{any_manager<T>} {
   data_ = new T{t};
   std::cout << "Allocating new any<" << typeid(T).name() << "> @" << data_ << '\n';
