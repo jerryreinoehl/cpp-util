@@ -101,7 +101,7 @@ namespace utl {
       enum class manager_op;
 
       void *data_{};
-      void (*manager_)(manager_op, void *, void **, const void**);
+      void (*manager_)(manager_op, void *, void **, const void**){};
 
       enum class manager_op {
         del,       // delete object
