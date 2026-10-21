@@ -13,16 +13,10 @@ namespace utl {
       using is_small_object = std::integral_constant<bool, sizeof(T) <= sizeof(void*) && alignof(T) <= alignof(void*)>;
 
       template <typename T, typename U>
-      using small_object_impl = std::enable_if<is_small_object<T>::value, U>;
+      using small_object_impl_t = typename std::enable_if<is_small_object<T>::value, U>::type;
 
       template <typename T, typename U>
-      using small_object_impl_t = typename small_object_impl<T, U>::type;
-
-      template <typename T, typename U>
-      using alloc_impl = std::enable_if<!is_small_object<T>::value, U>;
-
-      template <typename T, typename U>
-      using alloc_impl_t = typename alloc_impl<T, U>::type;
+      using alloc_impl_t = typename std::enable_if<!is_small_object<T>::value, U>::type;
 
       template <typename T>
       using decay_t = typename std::decay<T>::type;
