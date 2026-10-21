@@ -46,16 +46,17 @@ namespace utl {
       template <typename T, alloc_impl_t<T, int> = 0>
       any(T&& t);
 
+      // Copy/move construct another `any`.
       any(const any& other);
+      any(any&& other) noexcept;
 
-      any(any&& other) noexcept ;
-
+      // Copy/move assign another `any`.
       any& operator=(const any& other);
-
       any& operator=(any&& other) noexcept;
 
       ~any() noexcept;
 
+      // Construct a `T` in place within the `any`.
       template <typename T, typename... Args>
       typename std::enable_if<
         std::is_constructible<T, Args...>::value && is_small_object<T>::value, decay_t<T>&
@@ -68,6 +69,8 @@ namespace utl {
       >::type
       emplace(Args... args);
 
+      // Get a reference/copy of the contained `T`.
+      // Asserts that the type of the contained `any` type is `T`.
       template <typename T>
       small_object_impl_t<T, const decay_t<T>&>
       cast() const&;
