@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cassert>
-
-#include <iostream> // REMOVE
+#include <type_traits>
+#include <typeinfo>
+#include <utility>
 
 namespace utl {
 
@@ -119,7 +120,6 @@ namespace utl {
 
       template <typename T, any::small_object_impl_t<T, int> = 0>
       static void any_manager(manager_op op, void *a, void **b, const void **c);
-
   };
 
 }
@@ -138,13 +138,9 @@ inline utl::any::any() noexcept : data_{}, manager_{} {}
 
 template <typename T, utl::any::small_object_impl_t<T, int>>
 inline utl::any::any(T&& t) {
-  std::cout << "SOO available\n";
-
   using Type = typename std::decay<T>::type;
   new (&data_) Type{std::forward<T>(t)};
   manager_ = any_manager<Type>;
-
-  std::cout << "data_ = " << data_ << '\n';
 }
 
 template <typename T, utl::any::alloc_impl_t<T, int>>
@@ -152,24 +148,18 @@ inline utl::any::any(T&& t) {
   using Type = typename std::decay<T>::type;
   data_ = new Type{std::forward<T>(t)};
   manager_ = any_manager<Type>;
-
-  std::cout << "Allocating new any<" << typeid(T).name() << "> @" << data_ << '\n';
 }
 
 inline utl::any::any(const any& other) : manager_{other.manager_} {
-  std::cout << "In copy ctor\n";
   other.manager_(manager_op::clone, other.data_, &data_, nullptr);
 }
 
 inline utl::any::any(any&& other) noexcept : data_{other.data_}, manager_{other.manager_} {
-  std::cout << "In move ctor\n";
   other.data_ = nullptr;
   other.manager_ = nullptr;
 }
 
 inline utl::any& utl::any::operator=(const any& other) {
-  std::cout << "In copy assign\n";
-
   if (this == &other) {
     return *this;
   }
@@ -182,8 +172,6 @@ inline utl::any& utl::any::operator=(const any& other) {
 }
 
 inline utl::any& utl::any::operator=(any&& other) noexcept {
-  std::cout << "In move assign\n";
-
   if (this == &other) {
     return *this;
   }
@@ -198,7 +186,6 @@ inline utl::any& utl::any::operator=(any&& other) noexcept {
 }
 
 inline utl::any::~any() noexcept {
-  std::cout << "In dtor\n";
   if (data_ != nullptr) {
     manager_(manager_op::del, data_, nullptr, nullptr);
     data_ = nullptr;
@@ -301,12 +288,10 @@ template <typename T, utl::any::alloc_impl_t<T, int>>
 void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
     case utl::any::manager_op::del:
-      std::cout << "Deleting any<" << typeid(T).name() << "> @" << a << '\n';
       delete static_cast<T*>(a);
       break;
     case utl::any::manager_op::clone:
       *b = new T{*static_cast<T*>(a)};
-      std::cout << "Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
       break;
     case utl::any::manager_op::type_info:
       *c = &typeid(T);
@@ -318,11 +303,9 @@ template <typename T, utl::any::small_object_impl_t<T, int>>
 void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
     case utl::any::manager_op::del:
-      std::cout << "SOO Deleting any<" << typeid(T).name() << "> @" << a << '\n';
       reinterpret_cast<T*>(&a)->~T();
       break;
     case utl::any::manager_op::clone:
-      std::cout << "SOO Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
       new (b) T{*reinterpret_cast<T*>(&a)};
       break;
     case utl::any::manager_op::type_info:
@@ -330,4 +313,3 @@ void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const voi
       break;
   }
 }
-
