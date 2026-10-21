@@ -100,8 +100,12 @@ namespace utl {
     private:
       enum class manager_op;
 
-      void *data_{};
-      void (*manager_)(manager_op, void *, void **, const void**){};
+      union storage {
+        void *external;
+        char internal[sizeof(void*)/sizeof(char)];
+      } data_{};
+
+      void (*manager_)(manager_op, storage, storage *, const void**){};
 
       enum class manager_op {
         del,       // delete object
@@ -110,10 +114,10 @@ namespace utl {
       };
 
       template <typename T, any::alloc_impl_t<T, int> = 0>
-      static void any_manager(manager_op op, void *a, void **b, const void **c);
+      static void any_manager(manager_op op, storage a, storage *b, const void **c);
 
       template <typename T, any::small_object_impl_t<T, int> = 0>
-      static void any_manager(manager_op op, void *a, void **b, const void **c);
+      static void any_manager(manager_op op, storage a, storage *b, const void **c);
   };
 
 }
@@ -133,14 +137,14 @@ inline utl::any::any() noexcept : data_{}, manager_{} {}
 template <typename T, utl::any::small_object_impl_t<T, int>>
 inline utl::any::any(T&& t) {
   using Type = typename std::decay<T>::type;
-  new (&data_) Type{std::forward<T>(t)};
+  new (data_.internal) Type{std::forward<T>(t)};
   manager_ = any_manager<Type>;
 }
 
 template <typename T, utl::any::alloc_impl_t<T, int>>
 inline utl::any::any(T&& t) {
   using Type = typename std::decay<T>::type;
-  data_ = new Type{std::forward<T>(t)};
+  data_.external = new Type{std::forward<T>(t)};
   manager_ = any_manager<Type>;
 }
 
@@ -149,7 +153,7 @@ inline utl::any::any(const any& other) : manager_{other.manager_} {
 }
 
 inline utl::any::any(any&& other) noexcept : data_{other.data_}, manager_{other.manager_} {
-  other.data_ = nullptr;
+  other.data_.external = nullptr;
   other.manager_ = nullptr;
 }
 
@@ -173,16 +177,16 @@ inline utl::any& utl::any::operator=(any&& other) noexcept {
   manager_(manager_op::del, data_, nullptr, nullptr);
   data_ = other.data_;
   manager_ = other.manager_;
-  other.data_ = nullptr;
+  other.data_.external = nullptr;
   other.manager_ = nullptr;
 
   return *this;
 }
 
 inline utl::any::~any() noexcept {
-  if (data_ != nullptr) {
+  if (manager_ != nullptr) {
     manager_(manager_op::del, data_, nullptr, nullptr);
-    data_ = nullptr;
+    data_.external = nullptr;
     manager_ = nullptr;
   }
 }
@@ -197,9 +201,9 @@ inline utl::any::emplace(Args... args) {
   }
 
   manager_ = any_manager<T>;
-  new (&data_) T{std::forward<Args>(args)...};
+  new (data_.internal) T{std::forward<Args>(args)...};
 
-  return *reinterpret_cast<T*>(&data_);
+  return *reinterpret_cast<T*>(data_.internal);
 }
 
 template <typename T, typename... Args>
@@ -207,56 +211,56 @@ typename std::enable_if<
   std::is_constructible<T, Args...>::value && !utl::any::is_small_object<T>::value, utl::any::decay_t<T>&
 >::type
 inline utl::any::emplace(Args... args) {
-  if (data_ != nullptr) {
+  if (manager_ != nullptr) {
     manager_(manager_op::del, data_, nullptr, nullptr);
   }
 
   manager_ = any_manager<T>;
-  data_ = new T{std::forward<Args>(args)...};
+  data_.external = new T{std::forward<Args>(args)...};
 
-  return *static_cast<T*>(data_);
+  return *reinterpret_cast<T*>(data_.external);
 }
 
 template <typename T>
 utl::any::small_object_impl_t<T, const utl::any::decay_t<T>&>
 inline utl::any::cast() const& {
   assert(typeid(T) == type());
-  return *reinterpret_cast<const T*>(&data_);
+  return *reinterpret_cast<const T*>(data_.internal);
 }
 
 template <typename T>
 utl::any::alloc_impl_t<T, const utl::any::decay_t<T>&>
 inline utl::any::cast() const& {
   assert(typeid(T) == type());
-  return *static_cast<T*>(data_);
+  return *reinterpret_cast<T*>(data_.external);
 }
 
 template <typename T>
 utl::any::small_object_impl_t<T, utl::any::decay_t<T>&>
 inline utl::any::cast() & {
   assert(typeid(T) == type());
-  return *reinterpret_cast<T*>(&data_);
+  return *reinterpret_cast<T*>(data_.internal);
 }
 
 template <typename T>
 utl::any::alloc_impl_t<T, utl::any::decay_t<T>&>
 inline utl::any::cast() & {
   assert(typeid(T) == type());
-  return *static_cast<T*>(data_);
+  return *reinterpret_cast<T*>(data_.external);
 }
 
 template <typename T>
 utl::any::small_object_impl_t<T, utl::any::decay_t<T>>
 inline utl::any::cast() && {
   assert(typeid(T) == type());
-  return T{std::move(*reinterpret_cast<T*>(&data_))};
+  return T{std::move(*reinterpret_cast<T*>(data_.internal))};
 }
 
 template <typename T>
 utl::any::alloc_impl_t<T, utl::any::decay_t<T>>
 inline utl::any::cast() && {
   assert(typeid(T) == type());
-  return T{std::move(*static_cast<T*>(data_))};
+  return T{std::move(*reinterpret_cast<T*>(data_.external))};
 }
 
 inline void utl::any::reset() noexcept {
@@ -265,8 +269,8 @@ inline void utl::any::reset() noexcept {
 
 inline const std::type_info& utl::any::type() const noexcept {
   const void *info;
-  manager_(manager_op::type_info, nullptr, nullptr, &info);
-  return *static_cast<const std::type_info*>(info);
+  manager_(manager_op::type_info, storage{}, nullptr, &info);
+  return *reinterpret_cast<const std::type_info*>(info);
 }
 
 inline bool utl::any::has_value() const noexcept {
@@ -279,13 +283,13 @@ inline bool utl::any::is() const noexcept {
 }
 
 template <typename T, utl::any::alloc_impl_t<T, int>>
-void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
+void utl::any::any_manager(utl::any::manager_op op, utl::any::storage a, utl::any::storage *b, const void **c) {
   switch (op) {
     case utl::any::manager_op::del:
-      delete static_cast<T*>(a);
+      delete reinterpret_cast<T*>(a.external);
       break;
     case utl::any::manager_op::clone:
-      *b = new T{*static_cast<T*>(a)};
+      b->external = new T{*reinterpret_cast<T*>(a.external)};
       break;
     case utl::any::manager_op::type_info:
       *c = &typeid(T);
@@ -294,13 +298,13 @@ void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const voi
 }
 
 template <typename T, utl::any::small_object_impl_t<T, int>>
-void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
+void utl::any::any_manager(utl::any::manager_op op, utl::any::storage a, utl::any::storage *b, const void **c) {
   switch (op) {
     case utl::any::manager_op::del:
-      reinterpret_cast<T*>(&a)->~T();
+      reinterpret_cast<T*>(a.internal)->~T();
       break;
     case utl::any::manager_op::clone:
-      new (b) T{*reinterpret_cast<T*>(&a)};
+      new (b->internal) T{*reinterpret_cast<T*>(a.internal)};
       break;
     case utl::any::manager_op::type_info:
       *c = &typeid(T);
