@@ -79,7 +79,15 @@ namespace utl {
       ~any() noexcept;
 
       template <typename T, typename... Args>
-      typename std::enable_if<std::is_constructible<T, Args...>::value, typename std::decay<T>::type&>::type
+      typename std::enable_if<
+        std::is_constructible<T, Args...>::value && is_small_object<T>::value, decay_t<T>&
+      >::type
+      emplace(Args... args);
+
+      template <typename T, typename... Args>
+      typename std::enable_if<
+        std::is_constructible<T, Args...>::value && !is_small_object<T>::value, decay_t<T>&
+      >::type
       emplace(Args... args);
 
       void reset() noexcept;
@@ -253,9 +261,25 @@ inline utl::any::~any() noexcept {
   }
 }
 
-// TODO: need to implement for SOO.
 template <typename T, typename... Args>
-typename std::enable_if<std::is_constructible<T, Args...>::value, typename std::decay<T>::type&>::type
+typename std::enable_if<
+  std::is_constructible<T, Args...>::value && utl::any::is_small_object<T>::value, utl::any::decay_t<T>&
+>::type
+inline utl::any::emplace(Args... args) {
+  if (manager_ != nullptr) {
+    manager_(manager_op::Delete, data_, nullptr, nullptr);
+  }
+
+  manager_ = any_manager<T>;
+  new (&data_) T{std::forward<Args>(args)...};
+
+  return *reinterpret_cast<T*>(&data_);
+}
+
+template <typename T, typename... Args>
+typename std::enable_if<
+  std::is_constructible<T, Args...>::value && !utl::any::is_small_object<T>::value, utl::any::decay_t<T>&
+>::type
 inline utl::any::emplace(Args... args) {
   if (data_ != nullptr) {
     manager_(manager_op::Delete, data_, nullptr, nullptr);
