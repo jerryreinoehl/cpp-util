@@ -6,12 +6,6 @@
 
 namespace utl {
 
-  enum class manager_op {
-    Delete,
-    Clone,
-    TypeInfo,
-  };
-
   struct any {
     public:
       template <typename T>
@@ -95,58 +89,70 @@ namespace utl {
       alloc_impl_t<T, decay_t<T>>
       cast() &&;
 
+      // Destructs the contained type is one exists.
       void reset() noexcept;
 
+      // Returns the type info of the contained type.
       const std::type_info& type() const noexcept;
 
+      // Returns `true` if there is a contained type.
       bool has_value() const noexcept;
 
+      // Returns `true` if there is a contained type and the type if of type `T`.
       template <typename T>
       bool is() const noexcept;
 
     private:
+      enum class manager_op;
+
       void *data_{};
       void (*manager_)(manager_op, void *, void **, const void**);
 
+      enum class manager_op {
+        Delete,
+        Clone,
+        TypeInfo,
+      };
+
+      template <typename T, any::alloc_impl_t<T, int> = 0>
+      static void any_manager(manager_op op, void *a, void **b, const void **c);
+
+      template <typename T, any::small_object_impl_t<T, int> = 0>
+      static void any_manager(manager_op op, void *a, void **b, const void **c);
+
   };
-
-  template <typename T, any::alloc_impl_t<T, int> = 0>
-  void any_manager(manager_op op, void *a, void **b, const void **c);
-
-  template <typename T, any::small_object_impl_t<T, int> = 0>
-  void any_manager(manager_op op, void *a, void **b, const void **c);
 
 }
 
 template <typename T, utl::any::alloc_impl_t<T, int>>
-void utl::any_manager(utl::manager_op op, void *a, void **b, const void **c) {
+void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
-    case utl::manager_op::Delete:
+    case utl::any::manager_op::Delete:
       std::cout << "Deleting any<" << typeid(T).name() << "> @" << a << '\n';
       delete static_cast<T*>(a);
       break;
-    case utl::manager_op::Clone:
+    case utl::any::manager_op::Clone:
       *b = new T{*static_cast<T*>(a)};
       std::cout << "Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
       break;
-    case utl::manager_op::TypeInfo:
+    case utl::any::manager_op::TypeInfo:
       *c = &typeid(T);
       break;
   }
 }
 
 template <typename T, utl::any::small_object_impl_t<T, int>>
-void utl::any_manager(utl::manager_op op, void *a, void **b, const void **c) {
+void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
-    case utl::manager_op::Delete:
+    case utl::any::manager_op::Delete:
       std::cout << "SOO Deleting any<" << typeid(T).name() << "> @" << a << '\n';
       reinterpret_cast<T*>(&a)->~T();
       break;
-    case utl::manager_op::Clone:
+    case utl::any::manager_op::Clone:
       std::cout << "SOO Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
       new (b) T{*reinterpret_cast<T*>(&a)};
       break;
-    case utl::manager_op::TypeInfo:
+    case utl::any::manager_op::TypeInfo:
       *c = &typeid(T);
       break;
   }
