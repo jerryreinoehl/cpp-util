@@ -109,9 +109,9 @@ namespace utl {
       void (*manager_)(manager_op, void *, void **, const void**);
 
       enum class manager_op {
-        Delete,
-        Clone,
-        TypeInfo,
+        del,       // delete object
+        clone,     // clone object
+        type_info, // return type info
       };
 
       template <typename T, any::alloc_impl_t<T, int> = 0>
@@ -127,15 +127,15 @@ namespace utl {
 template <typename T, utl::any::alloc_impl_t<T, int>>
 void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
-    case utl::any::manager_op::Delete:
+    case utl::any::manager_op::del:
       std::cout << "Deleting any<" << typeid(T).name() << "> @" << a << '\n';
       delete static_cast<T*>(a);
       break;
-    case utl::any::manager_op::Clone:
+    case utl::any::manager_op::clone:
       *b = new T{*static_cast<T*>(a)};
       std::cout << "Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
       break;
-    case utl::any::manager_op::TypeInfo:
+    case utl::any::manager_op::type_info:
       *c = &typeid(T);
       break;
   }
@@ -144,15 +144,15 @@ void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const voi
 template <typename T, utl::any::small_object_impl_t<T, int>>
 void utl::any::any_manager(utl::any::manager_op op, void *a, void **b, const void **c) {
   switch (op) {
-    case utl::any::manager_op::Delete:
+    case utl::any::manager_op::del:
       std::cout << "SOO Deleting any<" << typeid(T).name() << "> @" << a << '\n';
       reinterpret_cast<T*>(&a)->~T();
       break;
-    case utl::any::manager_op::Clone:
+    case utl::any::manager_op::clone:
       std::cout << "SOO Clone any<" << typeid(T).name() << "> @" << a << " -> @" << *b << '\n';
       new (b) T{*reinterpret_cast<T*>(&a)};
       break;
-    case utl::any::manager_op::TypeInfo:
+    case utl::any::manager_op::type_info:
       *c = &typeid(T);
       break;
   }
@@ -192,7 +192,7 @@ inline utl::any::any(T&& t) {
 
 inline utl::any::any(const any& other) : manager_{other.manager_} {
   std::cout << "In copy ctor\n";
-  other.manager_(manager_op::Clone, other.data_, &data_, nullptr);
+  other.manager_(manager_op::clone, other.data_, &data_, nullptr);
 }
 
 inline utl::any::any(any&& other) noexcept : data_{other.data_}, manager_{other.manager_} {
@@ -208,8 +208,8 @@ inline utl::any& utl::any::operator=(const any& other) {
     return *this;
   }
 
-  manager_(manager_op::Delete, data_, nullptr, nullptr);
-  other.manager_(manager_op::Clone, other.data_, &data_, nullptr);
+  manager_(manager_op::del, data_, nullptr, nullptr);
+  other.manager_(manager_op::clone, other.data_, &data_, nullptr);
   manager_ = other.manager_;
 
   return *this;
@@ -222,7 +222,7 @@ inline utl::any& utl::any::operator=(any&& other) noexcept {
     return *this;
   }
 
-  manager_(manager_op::Delete, data_, nullptr, nullptr);
+  manager_(manager_op::del, data_, nullptr, nullptr);
   data_ = other.data_;
   manager_ = other.manager_;
   other.data_ = nullptr;
@@ -234,7 +234,7 @@ inline utl::any& utl::any::operator=(any&& other) noexcept {
 inline utl::any::~any() noexcept {
   std::cout << "In dtor\n";
   if (data_ != nullptr) {
-    manager_(manager_op::Delete, data_, nullptr, nullptr);
+    manager_(manager_op::del, data_, nullptr, nullptr);
     data_ = nullptr;
     manager_ = nullptr;
   }
@@ -246,7 +246,7 @@ typename std::enable_if<
 >::type
 inline utl::any::emplace(Args... args) {
   if (manager_ != nullptr) {
-    manager_(manager_op::Delete, data_, nullptr, nullptr);
+    manager_(manager_op::del, data_, nullptr, nullptr);
   }
 
   manager_ = any_manager<T>;
@@ -261,7 +261,7 @@ typename std::enable_if<
 >::type
 inline utl::any::emplace(Args... args) {
   if (data_ != nullptr) {
-    manager_(manager_op::Delete, data_, nullptr, nullptr);
+    manager_(manager_op::del, data_, nullptr, nullptr);
   }
 
   manager_ = any_manager<T>;
@@ -318,7 +318,7 @@ inline void utl::any::reset() noexcept {
 
 inline const std::type_info& utl::any::type() const noexcept {
   const void *info;
-  manager_(manager_op::TypeInfo, nullptr, nullptr, &info);
+  manager_(manager_op::type_info, nullptr, nullptr, &info);
   return *static_cast<const std::type_info*>(info);
 }
 
