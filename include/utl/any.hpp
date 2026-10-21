@@ -36,30 +36,6 @@ namespace utl {
       typename std::enable_if<std::is_constructible<T, Args...>::value, any>::type
       static make(Args... args);
 
-      template <typename T>
-      small_object_impl_t<T, const decay_t<T>&>
-      static cast(const any& any);
-
-      template <typename T>
-      alloc_impl_t<T, const decay_t<T>&>
-      static cast(const any& any);
-
-      template <typename T>
-      small_object_impl_t<T, decay_t<T>&>
-      static cast(any& any);
-
-      template <typename T>
-      alloc_impl_t<T, decay_t<T>&>
-      static cast(any& any);
-
-      template <typename T>
-      small_object_impl_t<T, decay_t<T>>
-      static cast(any&& any);
-
-      template <typename T>
-      alloc_impl_t<T, decay_t<T>>
-      static cast(any&& any);
-
       any() noexcept;
 
       template <typename T, small_object_impl_t<T, int> = 0>
@@ -89,6 +65,30 @@ namespace utl {
         std::is_constructible<T, Args...>::value && !is_small_object<T>::value, decay_t<T>&
       >::type
       emplace(Args... args);
+
+      template <typename T>
+      small_object_impl_t<T, const decay_t<T>&>
+      cast() const&;
+
+      template <typename T>
+      alloc_impl_t<T, const decay_t<T>&>
+      cast() const&;
+
+      template <typename T>
+      small_object_impl_t<T, decay_t<T>&>
+      cast() &;
+
+      template <typename T>
+      alloc_impl_t<T, decay_t<T>&>
+      cast() &;
+
+      template <typename T>
+      small_object_impl_t<T, decay_t<T>>
+      cast() &&;
+
+      template <typename T>
+      alloc_impl_t<T, decay_t<T>>
+      cast() &&;
 
       void reset() noexcept;
 
@@ -152,48 +152,6 @@ template <typename T, typename... Args>
 typename std::enable_if<std::is_constructible<T, Args...>::value, utl::any>::type
 inline utl::any::make(Args... args) {
   return any{T{std::forward<Args>(args)...}};
-}
-
-template <typename T>
-utl::any::small_object_impl_t<T, const utl::any::decay_t<T>&>
-inline utl::any::cast(const any& any) {
-  assert(typeid(T) == any.type());
-  return *reinterpret_cast<const T*>(&any.data_);
-}
-
-template <typename T>
-utl::any::alloc_impl_t<T, const utl::any::decay_t<T>&>
-inline utl::any::cast(const any& any) {
-  assert(typeid(T) == any.type());
-  return *static_cast<T*>(any.data_);
-}
-
-template <typename T>
-utl::any::small_object_impl_t<T, utl::any::decay_t<T>&>
-inline utl::any::cast(any& any) {
-  assert(typeid(T) == any.type());
-  return *reinterpret_cast<T*>(&any.data_);
-}
-
-template <typename T>
-utl::any::alloc_impl_t<T, utl::any::decay_t<T>&>
-inline utl::any::cast(any& any) {
-  assert(typeid(T) == any.type());
-  return *static_cast<T*>(any.data_);
-}
-
-template <typename T>
-utl::any::small_object_impl_t<T, utl::any::decay_t<T>>
-inline utl::any::cast(any&& any) {
-  assert(typeid(T) == any.type());
-  return T{std::move(*reinterpret_cast<T*>(&any.data_))};
-}
-
-template <typename T>
-utl::any::alloc_impl_t<T, utl::any::decay_t<T>>
-inline utl::any::cast(any&& any) {
-  assert(typeid(T) == any.type());
-  return T{std::move(*static_cast<T*>(any.data_))};
 }
 
 inline utl::any::any() noexcept : data_{}, manager_{} {}
@@ -289,6 +247,48 @@ inline utl::any::emplace(Args... args) {
   data_ = new T{std::forward<Args>(args)...};
 
   return *static_cast<T*>(data_);
+}
+
+template <typename T>
+utl::any::small_object_impl_t<T, const utl::any::decay_t<T>&>
+inline utl::any::cast() const& {
+  assert(typeid(T) == type());
+  return *reinterpret_cast<const T*>(&data_);
+}
+
+template <typename T>
+utl::any::alloc_impl_t<T, const utl::any::decay_t<T>&>
+inline utl::any::cast() const& {
+  assert(typeid(T) == type());
+  return *static_cast<T*>(data_);
+}
+
+template <typename T>
+utl::any::small_object_impl_t<T, utl::any::decay_t<T>&>
+inline utl::any::cast() & {
+  assert(typeid(T) == type());
+  return *reinterpret_cast<T*>(&data_);
+}
+
+template <typename T>
+utl::any::alloc_impl_t<T, utl::any::decay_t<T>&>
+inline utl::any::cast() & {
+  assert(typeid(T) == type());
+  return *static_cast<T*>(data_);
+}
+
+template <typename T>
+utl::any::small_object_impl_t<T, utl::any::decay_t<T>>
+inline utl::any::cast() && {
+  assert(typeid(T) == type());
+  return T{std::move(*reinterpret_cast<T*>(&data_))};
+}
+
+template <typename T>
+utl::any::alloc_impl_t<T, utl::any::decay_t<T>>
+inline utl::any::cast() && {
+  assert(typeid(T) == type());
+  return T{std::move(*static_cast<T*>(data_))};
 }
 
 inline void utl::any::reset() noexcept {
