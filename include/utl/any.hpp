@@ -96,6 +96,9 @@ namespace utl {
 
       bool has_value() const noexcept;
 
+      template <typename T>
+      bool is() const noexcept;
+
     private:
       void *data_{};
       void (*manager_)(manager_op, void *, void **, const void**);
@@ -303,4 +306,9 @@ inline const std::type_info& utl::any::type() const noexcept {
 
 inline bool utl::any::has_value() const noexcept {
   return manager_ != nullptr;
+}
+
+template <typename T>
+inline bool utl::any::is() const noexcept {
+  return type() == typeid(T);
 }
