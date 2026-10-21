@@ -322,5 +322,5 @@ inline bool utl::any::has_value() const noexcept {
 
 template <typename T>
 inline bool utl::any::is() const noexcept {
-  return type() == typeid(T);
+  return has_value() && (type() == typeid(T));
 }
