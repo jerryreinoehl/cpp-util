@@ -36,13 +36,15 @@ namespace utl {
       typename std::enable_if<std::is_constructible<T, Args...>::value, any>::type
       static make(Args... args);
 
+      // Construct an empty `any` object.
       any() noexcept;
 
+      // Construct an `any` object by copying/moving `t`.
       template <typename T, small_object_impl_t<T, int> = 0>
-      any(const T& t);
+      any(T&& t);
 
       template <typename T, alloc_impl_t<T, int> = 0>
-      any(const T& t);
+      any(T&& t);
 
       any(const any& other);
 
@@ -160,15 +162,22 @@ inline utl::any::make(Args... args) {
 inline utl::any::any() noexcept : data_{}, manager_{} {}
 
 template <typename T, utl::any::small_object_impl_t<T, int>>
-inline utl::any::any(const T& t) : manager_{any_manager<T>} {
+inline utl::any::any(T&& t) {
   std::cout << "SOO available\n";
-  new (&data_) T{t};
+
+  using Type = typename std::decay<T>::type;
+  new (&data_) Type{std::forward<T>(t)};
+  manager_ = any_manager<Type>;
+
   std::cout << "data_ = " << data_ << '\n';
 }
 
 template <typename T, utl::any::alloc_impl_t<T, int>>
-inline utl::any::any(const T& t) : manager_{any_manager<T>} {
-  data_ = new T{t};
+inline utl::any::any(T&& t) {
+  using Type = typename std::decay<T>::type;
+  data_ = new Type{std::forward<T>(t)};
+  manager_ = any_manager<Type>;
+
   std::cout << "Allocating new any<" << typeid(T).name() << "> @" << data_ << '\n';
 }
 
