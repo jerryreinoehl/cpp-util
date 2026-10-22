@@ -120,6 +120,20 @@ namespace utl {
       static void any_manager(manager_op op, storage a, storage *b, const void **c);
   };
 
+
+  struct any_view {
+    public:
+      template <typename T>
+      any_view(T&& t);
+
+      template <typename T>
+      const T& cast() const;
+
+    private:
+      const void *data_{};
+      const std::type_info *info_{};
+  };
+
 }
 
 //*****************************************************************************
@@ -310,4 +324,20 @@ void utl::any::any_manager(utl::any::manager_op op, utl::any::storage a, utl::an
       *c = &typeid(T);
       break;
   }
+}
+
+//*****************************************************************************
+// struct utl::any_view
+//*****************************************************************************
+
+template <typename T>
+utl::any_view::any_view(T&& t) : data_{&t} {
+  using Type = typename std::decay<T>::type;
+  info_ = &typeid(Type);
+}
+
+template <typename T>
+const T& utl::any_view::cast() const {
+  assert(typeid(T) == *info_);
+  return *reinterpret_cast<const T*>(data_);
 }
