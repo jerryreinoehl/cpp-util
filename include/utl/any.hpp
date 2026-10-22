@@ -133,7 +133,7 @@ namespace utl {
       >
       any_view(T&& t) noexcept;
 
-      any_view(const any& any);
+      any_view(const any& any) noexcept;
 
       any_view(const any_view& other) = default;
       any_view(any_view&& other) = default;
@@ -369,7 +369,7 @@ void utl::any::any_manager(utl::any::manager_op op, utl::any::storage a, utl::an
 inline utl::any_view::any_view() noexcept : data_{}, type_{} {}
 
 template <typename T, typename std::enable_if<!std::is_same<typename std::decay<T>::type, utl::any>::value, int>::type>
-inline utl::any_view::any_view(T&& t) : data_{&t} {
+inline utl::any_view::any_view(T&& t) noexcept : data_{&t} {
   using Type = typename std::decay<T>::type;
   type_ = &typeid(Type);
 }
