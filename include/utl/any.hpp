@@ -90,6 +90,8 @@ namespace utl {
       // Returns the type info of the contained type.
       const std::type_info& type() const noexcept;
 
+      const void *data() const noexcept;
+
       // Returns `true` if there is a contained type.
       bool has_value() const noexcept;
 
@@ -123,11 +125,23 @@ namespace utl {
 
   struct any_view {
     public:
-      template <typename T>
+      template <
+        typename T,
+        typename std::enable_if<!std::is_same<typename std::decay<T>::type, any>::value, int>::type = 0
+      >
       any_view(T&& t);
 
+      any_view(const any& any);
+
+      // Get a reference of the contained `T`.
+      // Asserts that the type of the contained `any_view` type is `T`.
       template <typename T>
-      const T& cast() const;
+      any::small_object_impl_t<T, const any::decay_t<T>&>
+      cast() const;
+
+      template <typename T>
+      any::alloc_impl_t<T, const any::decay_t<T>&>
+      cast() const;
 
       // Returns the type info of the contained type.
       const std::type_info& type() const noexcept;
@@ -138,7 +152,7 @@ namespace utl {
 
     private:
       const void *data_{};
-      const std::type_info *info_{};
+      const std::type_info *type_{};
   };
 
 }
@@ -294,6 +308,10 @@ inline const std::type_info& utl::any::type() const noexcept {
   return *reinterpret_cast<const std::type_info*>(info);
 }
 
+inline const void *utl::any::data() const noexcept {
+  return data_.external;
+}
+
 inline bool utl::any::has_value() const noexcept {
   return manager_ != nullptr;
 }
@@ -337,23 +355,37 @@ void utl::any::any_manager(utl::any::manager_op op, utl::any::storage a, utl::an
 // struct utl::any_view
 //*****************************************************************************
 
-template <typename T>
+template <typename T, typename std::enable_if<!std::is_same<typename std::decay<T>::type, utl::any>::value, int>::type>
 inline utl::any_view::any_view(T&& t) : data_{&t} {
   using Type = typename std::decay<T>::type;
-  info_ = &typeid(Type);
+  type_ = &typeid(Type);
+}
+
+#include <iostream>
+inline utl::any_view::any_view(const any& any) : data_{any.data()}, type_{&any.type()} {
+  std::cout << "in any_view(any)\n";
 }
 
 template <typename T>
-inline const T& utl::any_view::cast() const {
-  assert(typeid(T) == *info_);
+utl::any::small_object_impl_t<T, const utl::any::decay_t<T>&>
+inline utl::any_view::cast() const {
+  assert(typeid(T) == *type_);
+  const char *buf = reinterpret_cast<const char *>(&data_);
+  return *reinterpret_cast<const T*>(buf);
+}
+
+template <typename T>
+utl::any::alloc_impl_t<T, const utl::any::decay_t<T>&>
+inline utl::any_view::cast() const {
+  assert(typeid(T) == *type_);
   return *reinterpret_cast<const T*>(data_);
 }
 
 inline const std::type_info& utl::any_view::type() const noexcept {
-  return *info_;
+  return *type_;
 }
 
 template <typename T>
 inline bool utl::any_view::is() const noexcept {
-  return type() == *info_;
+  return type() == *type_;
 }
