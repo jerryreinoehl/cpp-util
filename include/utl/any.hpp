@@ -90,7 +90,8 @@ namespace utl {
       // Returns the type info of the contained type.
       const std::type_info& type() const noexcept;
 
-      const void *data() const noexcept;
+      // Returns a pointer to the contained type.
+      const void *ref() const noexcept;
 
       // Returns `true` if there is a contained type.
       bool has_value() const noexcept;
@@ -113,6 +114,7 @@ namespace utl {
         del,       // delete object
         clone,     // clone object
         type_info, // return type info
+        ref,       // returns a pointer to the underlying object
       };
 
       template <typename T, any::alloc_impl_t<T, int> = 0>
@@ -313,8 +315,10 @@ inline const std::type_info& utl::any::type() const noexcept {
   return *reinterpret_cast<const std::type_info*>(info);
 }
 
-inline const void *utl::any::data() const noexcept {
-  return data_.external;
+inline const void *utl::any::ref() const noexcept {
+  const void *ref;
+  manager_(manager_op::ref, storage{}, const_cast<storage*>(&data_), &ref);
+  return ref;
 }
 
 inline bool utl::any::has_value() const noexcept {
@@ -338,6 +342,9 @@ void utl::any::any_manager(utl::any::manager_op op, utl::any::storage a, utl::an
     case utl::any::manager_op::type_info:
       *c = &typeid(T);
       break;
+    case utl::any::manager_op::ref:
+      *c = b->external;
+      break;
   }
 }
 
@@ -352,6 +359,9 @@ void utl::any::any_manager(utl::any::manager_op op, utl::any::storage a, utl::an
       break;
     case utl::any::manager_op::type_info:
       *c = &typeid(T);
+      break;
+    case utl::any::manager_op::ref:
+      *c = b->internal;
       break;
   }
 }
@@ -371,9 +381,7 @@ inline utl::any_view::any_view(T&& t) noexcept : data_{&t} {
   type_ = &typeid(Type);
 }
 
-// TODO: This needs work. We need a reference to the contained `any` object, however, we
-// don't know it's type so we don't know if SOO is used.
-inline utl::any_view::any_view(const any& any) noexcept : data_{any.data()}, type_{&any.type()} {}
+inline utl::any_view::any_view(const any& any) noexcept : data_{any.ref()}, type_{&any.type()} {}
 
 template <typename T>
 inline const T& utl::any_view::cast() const {
