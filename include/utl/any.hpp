@@ -141,15 +141,8 @@ namespace utl {
       any_view& operator=(const any_view& other) = default;
       any_view& operator=(any_view&& other) = default;
 
-      // Get a reference of the contained `T`.
-      // Asserts that the type of the contained `any_view` type is `T`.
       template <typename T>
-      any::small_object_impl_t<T, const any::decay_t<T>&>
-      cast() const;
-
-      template <typename T>
-      any::alloc_impl_t<T, const any::decay_t<T>&>
-      cast() const;
+      const T& cast() const;
 
       // Returns the type info of the contained type.
       const std::type_info& type() const noexcept;
@@ -377,16 +370,7 @@ inline utl::any_view::any_view(T&& t) noexcept : data_{&t} {
 inline utl::any_view::any_view(const any& any) noexcept : data_{any.data()}, type_{&any.type()} {}
 
 template <typename T>
-utl::any::small_object_impl_t<T, const utl::any::decay_t<T>&>
-inline utl::any_view::cast() const {
-  assert(typeid(T) == *type_);
-  const char *buf = reinterpret_cast<const char *>(&data_);
-  return *reinterpret_cast<const T*>(buf);
-}
-
-template <typename T>
-utl::any::alloc_impl_t<T, const utl::any::decay_t<T>&>
-inline utl::any_view::cast() const {
+inline const T& utl::any_view::cast() const {
   assert(typeid(T) == *type_);
   return *reinterpret_cast<const T*>(data_);
 }
