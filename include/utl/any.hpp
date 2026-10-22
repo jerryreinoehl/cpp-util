@@ -374,10 +374,7 @@ inline utl::any_view::any_view(T&& t) : data_{&t} {
   type_ = &typeid(Type);
 }
 
-#include <iostream>
-inline utl::any_view::any_view(const any& any) : data_{any.data()}, type_{&any.type()} {
-  std::cout << "in any_view(any)\n";
-}
+inline utl::any_view::any_view(const any& any) : data_{any.data()}, type_{&any.type()} {}
 
 template <typename T>
 utl::any::small_object_impl_t<T, const utl::any::decay_t<T>&>
