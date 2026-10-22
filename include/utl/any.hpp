@@ -93,7 +93,7 @@ namespace utl {
       // Returns `true` if there is a contained type.
       bool has_value() const noexcept;
 
-      // Returns `true` if there is a contained type and the type if of type `T`.
+      // Returns `true` if there is a contained type and the type is of type `T`.
       template <typename T>
       bool is() const noexcept;
 
@@ -128,6 +128,13 @@ namespace utl {
 
       template <typename T>
       const T& cast() const;
+
+      // Returns the type info of the contained type.
+      const std::type_info& type() const noexcept;
+
+      // Returns `true` if the referenced type is of type `T`.
+      template <typename T>
+      bool is() const noexcept;
 
     private:
       const void *data_{};
@@ -331,13 +338,22 @@ void utl::any::any_manager(utl::any::manager_op op, utl::any::storage a, utl::an
 //*****************************************************************************
 
 template <typename T>
-utl::any_view::any_view(T&& t) : data_{&t} {
+inline utl::any_view::any_view(T&& t) : data_{&t} {
   using Type = typename std::decay<T>::type;
   info_ = &typeid(Type);
 }
 
 template <typename T>
-const T& utl::any_view::cast() const {
+inline const T& utl::any_view::cast() const {
   assert(typeid(T) == *info_);
   return *reinterpret_cast<const T*>(data_);
+}
+
+inline const std::type_info& utl::any_view::type() const noexcept {
+  return *info_;
+}
+
+template <typename T>
+inline bool utl::any_view::is() const noexcept {
+  return type() == *info_;
 }
