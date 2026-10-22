@@ -131,7 +131,7 @@ namespace utl {
         typename T,
         typename std::enable_if<!std::is_same<typename std::decay<T>::type, any>::value, int>::type = 0
       >
-      any_view(T&& t);
+      any_view(T&& t) noexcept;
 
       any_view(const any& any);
 
@@ -374,7 +374,7 @@ inline utl::any_view::any_view(T&& t) : data_{&t} {
   type_ = &typeid(Type);
 }
 
-inline utl::any_view::any_view(const any& any) : data_{any.data()}, type_{&any.type()} {}
+inline utl::any_view::any_view(const any& any) noexcept : data_{any.data()}, type_{&any.type()} {}
 
 template <typename T>
 utl::any::small_object_impl_t<T, const utl::any::decay_t<T>&>
