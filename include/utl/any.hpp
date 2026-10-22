@@ -122,11 +122,12 @@ namespace utl {
       static void any_manager(manager_op op, storage a, storage *b, const void **c);
   };
 
-
+  // `any_view` provides a lightweight, non-owning view of any type `T`.
   struct any_view {
     public:
       any_view() noexcept;
 
+      // Obtains a reference to `T t`.
       template <
         typename T,
         typename std::enable_if<!std::is_same<typename std::decay<T>::type, any>::value, int>::type = 0
