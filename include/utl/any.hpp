@@ -371,6 +371,8 @@ inline utl::any_view::any_view(T&& t) noexcept : data_{&t} {
   type_ = &typeid(Type);
 }
 
+// TODO: This needs work. We need a reference to the contained `any` object, however, we
+// don't know it's type so we don't know if SOO is used.
 inline utl::any_view::any_view(const any& any) noexcept : data_{any.data()}, type_{&any.type()} {}
 
 template <typename T>
