@@ -28,6 +28,12 @@ namespace utl {
   template <typename T>
   constexpr bool is_pointer_v() { return is_pointer<T>::value; }
 
+  template <typename T>
+  using decay = std::decay<T>;
+
+  template <typename T>
+  using decay_t = typename std::decay<T>::type;
+
   template <bool B, typename T = void>
   using enable_if = std::enable_if<B, T>;
 
