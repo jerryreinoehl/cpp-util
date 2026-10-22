@@ -125,6 +125,8 @@ namespace utl {
 
   struct any_view {
     public:
+      any_view() noexcept;
+
       template <
         typename T,
         typename std::enable_if<!std::is_same<typename std::decay<T>::type, any>::value, int>::type = 0
@@ -132,6 +134,12 @@ namespace utl {
       any_view(T&& t);
 
       any_view(const any& any);
+
+      any_view(const any_view& other) = default;
+      any_view(any_view&& other) = default;
+
+      any_view& operator=(const any_view& other) = default;
+      any_view& operator=(any_view&& other) = default;
 
       // Get a reference of the contained `T`.
       // Asserts that the type of the contained `any_view` type is `T`.
@@ -145,6 +153,9 @@ namespace utl {
 
       // Returns the type info of the contained type.
       const std::type_info& type() const noexcept;
+
+      // Returns `true` if there is a contained type.
+      bool has_value() const noexcept;
 
       // Returns `true` if the referenced type is of type `T`.
       template <typename T>
@@ -355,6 +366,8 @@ void utl::any::any_manager(utl::any::manager_op op, utl::any::storage a, utl::an
 // struct utl::any_view
 //*****************************************************************************
 
+inline utl::any_view::any_view() noexcept : data_{}, type_{} {}
+
 template <typename T, typename std::enable_if<!std::is_same<typename std::decay<T>::type, utl::any>::value, int>::type>
 inline utl::any_view::any_view(T&& t) : data_{&t} {
   using Type = typename std::decay<T>::type;
@@ -385,7 +398,11 @@ inline const std::type_info& utl::any_view::type() const noexcept {
   return *type_;
 }
 
+inline bool utl::any_view::has_value() const noexcept {
+  return type_ != nullptr;
+}
+
 template <typename T>
 inline bool utl::any_view::is() const noexcept {
-  return type() == *type_;
+  return has_value() && (type() == *type_);
 }
