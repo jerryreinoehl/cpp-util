@@ -58,4 +58,22 @@ namespace utl {
   template <typename T, typename... Args>
   constexpr bool is_trivially_constructible_v() { return is_trivially_constructible<T, Args...>::value; }
 
+  // `is_none_of<T, Types...>::value` is `true` if type `T` is not amoung the
+  // types in `Types`.
+  template <typename T, typename... Types>
+  struct is_none_of : std::true_type {};
+
+  template <typename T, typename First, typename... Rest>
+  struct is_none_of<T, First, Rest...>
+    : std::integral_constant<
+      bool,
+      !std::is_same<T, First>::value && is_none_of<T, Rest...>::value
+    > {};
+
+  // Convenience function for `is_none_of<T, Types...>::value`.
+  template <typename T, typename... Types>
+  constexpr bool is_none_of_v() {
+    return is_none_of<T, Types...>::value;
+  }
+
 };
