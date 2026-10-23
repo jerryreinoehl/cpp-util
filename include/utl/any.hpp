@@ -5,6 +5,8 @@
 #include <typeinfo>
 #include <utility>
 
+#include <utl/type_traits.hpp>
+
 namespace utl {
 
   struct any {
@@ -132,7 +134,7 @@ namespace utl {
       // Obtains a reference to `T t`.
       template <
         typename T,
-        typename std::enable_if<!std::is_same<typename std::decay<T>::type, any>::value, int>::type = 0
+        typename std::enable_if<utl::is_none_of_v<typename std::decay<T>::type, any, any_view>(), int>::type = 0
       >
       any_view(T&& t) noexcept;
 
@@ -374,7 +376,7 @@ inline utl::any_view::any_view() noexcept : data_{}, type_{} {}
 
 template <
   typename T,
-  typename std::enable_if<!std::is_same<typename std::decay<T>::type, utl::any>::value, int>::type
+  typename std::enable_if<utl::is_none_of_v<typename std::decay<T>::type, utl::any, utl::any_view>(), int>::type
 >
 inline utl::any_view::any_view(T&& t) noexcept : data_{&t} {
   using Type = typename std::decay<T>::type;
