@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 
 namespace utl {
 
@@ -18,6 +19,9 @@ namespace utl {
       constexpr const char& operator[](size_t idx) const noexcept;
 
       constexpr const char *data() const noexcept;
+
+      // Create and return a `std::string` from this `string_view`.
+      std::string to_string() const noexcept;
 
       explicit operator std::string() const;
 
@@ -62,6 +66,10 @@ constexpr const char& utl::string_view::operator[](size_t idx) const noexcept {
 
 constexpr const char* utl::string_view::data() const noexcept {
   return data_;
+}
+
+inline std::string utl::string_view::to_string() const noexcept {
+  return std::string{data_};
 }
 
 inline utl::string_view::operator std::string() const {
