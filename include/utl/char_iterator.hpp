@@ -11,14 +11,14 @@ namespace utl {
   template <typename CharT>
   struct char_iterator_base {
     public:
-      char_iterator_base();
-      explicit char_iterator_base(CharT* p);
-      char_iterator_base(const char_iterator_base<CharT>& other) = default;
+      constexpr char_iterator_base();
+      constexpr explicit char_iterator_base(CharT* p);
+      constexpr char_iterator_base(const char_iterator_base<CharT>& other) = default;
 
       char_iterator_base<CharT>& operator=(const char_iterator_base<CharT>& other) = default;
 
       // Returns a reference ot the `CharT` the iterator currently points to.
-      CharT& operator*() const noexcept;
+      constexpr CharT& operator*() const noexcept;
 
       // Advances the iterator only if it does not point to a null char.
       char_iterator_base<CharT>& operator++() noexcept;
@@ -26,12 +26,12 @@ namespace utl {
 
       // Two `char_iterator_base`'s are equivalent if they point to the same
       // memory location.
-      bool operator==(char_iterator_base<CharT> other) const noexcept;
-      bool operator!=(char_iterator_base<CharT> other) const noexcept;
+      constexpr bool operator==(char_iterator_base<CharT> other) const noexcept;
+      constexpr bool operator!=(char_iterator_base<CharT> other) const noexcept;
 
       // Converts to `false` if the iterator points to a null char '\0', and
       // `true` otherwise.
-      operator bool() const noexcept;
+      constexpr operator bool() const noexcept;
 
       // Convert the iterator to a string starting from its current position
       // and ending at the next null char, or ending at another iterator,
@@ -67,13 +67,13 @@ namespace utl {
 //*****************************************************************************
 
 template <typename CharT>
-inline utl::char_iterator_base<CharT>::char_iterator_base() : p_{nullptr} {}
+inline constexpr utl::char_iterator_base<CharT>::char_iterator_base() : p_{nullptr} {}
 
 template <typename CharT>
-inline utl::char_iterator_base<CharT>::char_iterator_base(CharT* p) : p_{p} {}
+inline constexpr utl::char_iterator_base<CharT>::char_iterator_base(CharT* p) : p_{p} {}
 
 template <typename CharT>
-inline CharT& utl::char_iterator_base<CharT>::operator*() const noexcept {
+inline constexpr CharT& utl::char_iterator_base<CharT>::operator*() const noexcept {
   return *p_;
 }
 
@@ -91,17 +91,17 @@ inline utl::char_iterator_base<CharT> utl::char_iterator_base<CharT>::operator++
 }
 
 template <typename CharT>
-inline bool utl::char_iterator_base<CharT>::operator==(char_iterator_base<CharT> other) const noexcept {
+inline constexpr bool utl::char_iterator_base<CharT>::operator==(char_iterator_base<CharT> other) const noexcept {
   return p_ == other.p_;
 }
 
 template <typename CharT>
-inline bool utl::char_iterator_base<CharT>::operator!=(char_iterator_base<CharT> other) const noexcept {
+inline constexpr bool utl::char_iterator_base<CharT>::operator!=(char_iterator_base<CharT> other) const noexcept {
   return p_ != other.p_;
 }
 
 template <typename CharT>
-inline utl::char_iterator_base<CharT>::operator bool() const noexcept {
+inline constexpr utl::char_iterator_base<CharT>::operator bool() const noexcept {
   return *p_;
 }
 
