@@ -3,6 +3,8 @@
 #include <string>
 #include <functional>
 
+#include <utl/string_view.hpp>
+
 namespace utl {
 
   // An iterator over a sequence of `CharT` characters.
@@ -36,6 +38,9 @@ namespace utl {
       // `end`.
       std::string to_string() const;
       std::string to_string(char_iterator_base<CharT> end) const;
+
+      // Returns a `utl::string_view` pointing to this iterator's buffer.
+      constexpr utl::string_view view() const;
 
       // Advance the iterator until it matches a `CharT` `c`, the `CharT`
       // sequence `cp`, or while the function `func` returns `true`.
@@ -110,6 +115,11 @@ inline std::string utl::char_iterator_base<CharT>::to_string() const {
 template <typename CharT>
 inline std::string utl::char_iterator_base<CharT>::to_string(char_iterator_base<CharT> end) const {
   return std::string{p_, end.p_};
+}
+
+template <typename CharT>
+inline constexpr utl::string_view utl::char_iterator_base<CharT>::view() const {
+  return utl::string_view{p_};
 }
 
 template <typename CharT>
