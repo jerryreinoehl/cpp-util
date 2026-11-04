@@ -261,7 +261,7 @@ inline E&& utl::unexpected<E>::error() && noexcept {
 
 //*****************************************************************************
 // template <typename V, typename E>
-// struct expected<T, E>
+// struct expected<V, E>
 //*****************************************************************************
 
 template <typename V, typename E>
