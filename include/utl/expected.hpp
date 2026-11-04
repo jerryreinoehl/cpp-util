@@ -21,6 +21,8 @@ namespace utl {
       unexpected& operator=(const unexpected<E>& rhs);
       unexpected& operator=(unexpected<E>&& rhs);
 
+      constexpr bool operator==(const unexpected<E>& rhs) const noexcept;
+
       constexpr const E& error() const& noexcept;
       E& error() & noexcept;
       constexpr const E&& error() const&& noexcept;
@@ -230,6 +232,11 @@ inline utl::unexpected<E>& utl::unexpected<E>::operator=(unexpected<E>&& rhs) {
   error_ = std::move(rhs.error_);
 
   return *this;
+}
+
+template <typename E>
+constexpr inline bool utl::unexpected<E>::operator==(const unexpected<E>& rhs) const noexcept {
+  return error_ == rhs.error_;
 }
 
 template <typename E>
