@@ -97,9 +97,10 @@ namespace utl {
       constexpr const V&& value() const&& noexcept;
       V&& value() && noexcept;
 
-      E& error() &;
-      const E& error() const&;
-      E&& error() &&;
+      constexpr const E& error() const& noexcept;
+      E& error() & noexcept;
+      constexpr const E&& error() const&& noexcept;
+      E&& error() && noexcept;
 
       template <typename F>
       typename normalize_expected<
@@ -353,17 +354,22 @@ inline V&& utl::expected<V, E>::value() && noexcept {
 }
 
 template <typename V, typename E>
-inline E& utl::expected<V, E>::error() & {
+constexpr inline const E& utl::expected<V, E>::error() const& noexcept {
   return storage_.error;
 }
 
 template <typename V, typename E>
-inline const E& utl::expected<V, E>::error() const& {
+inline E& utl::expected<V, E>::error() & noexcept {
   return storage_.error;
 }
 
 template <typename V, typename E>
-inline E&& utl::expected<V, E>::error() && {
+constexpr inline const E&& utl::expected<V, E>::error() const&& noexcept {
+  return std::move(storage_.error);
+}
+
+template <typename V, typename E>
+inline E&& utl::expected<V, E>::error() && noexcept {
   return std::move(storage_.error);
 }
 
