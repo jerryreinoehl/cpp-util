@@ -131,13 +131,13 @@ namespace utl {
       expected<V, E>& operator=(const expected<V, E>& rhs) noexcept;
       expected<V, E>& operator=(expected<V, E>&& rhs) noexcept;
 
-      explicit operator bool() const;
+      constexpr explicit operator bool() const noexcept;
 
-      const V& operator*() const&;
-      V& operator*() &;
+      constexpr const V& operator*() const& noexcept;
+      V& operator*() & noexcept;
 
-      const V* operator->() const&;
-      V* operator->() &;
+      constexpr const V* operator->() const& noexcept;
+      V* operator->() & noexcept;
 
     private:
       union Storage {
@@ -512,26 +512,26 @@ inline utl::expected<V, E>& utl::expected<V, E>::operator=(expected<V, E>&& rhs)
 }
 
 template <typename V, typename E>
-inline utl::expected<V, E>::operator bool() const {
+constexpr inline utl::expected<V, E>::operator bool() const noexcept {
   return has_value_;
 }
 
 template <typename V, typename E>
-inline const V& utl::expected<V, E>::operator*() const& {
+constexpr inline const V& utl::expected<V, E>::operator*() const& noexcept {
   return storage_.value;
 }
 
 template <typename V, typename E>
-inline V& utl::expected<V, E>::operator*() & {
+inline V& utl::expected<V, E>::operator*() & noexcept {
   return storage_.value;
 }
 
 template <typename V, typename E>
-inline const V* utl::expected<V, E>::operator->() const& {
+constexpr inline const V* utl::expected<V, E>::operator->() const& noexcept {
   return &storage_.value;
 }
 
 template <typename V, typename E>
-inline V* utl::expected<V, E>::operator->() & {
+inline V* utl::expected<V, E>::operator->() & noexcept {
   return &storage_.value;
 }
