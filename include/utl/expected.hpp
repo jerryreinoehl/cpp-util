@@ -7,16 +7,16 @@ namespace utl {
   template <typename E>
   struct unexpected {
     public:
-      explicit unexpected(const E& error);
-      explicit unexpected(E&& error);
-      unexpected(const unexpected<E>& error);
-      unexpected(unexpected<E>&& error);
+      constexpr explicit unexpected(const E& error);
+      constexpr explicit unexpected(E&& error) noexcept;
+      constexpr unexpected(const unexpected<E>& error);
+      constexpr unexpected(unexpected<E>&& error);
 
       template <
         typename... Args,
         typename std::enable_if<std::is_constructible<E, Args...>::value, int>::type = 0
       >
-      explicit unexpected(Args&&... args);
+      constexpr explicit unexpected(Args&&... args);
 
       unexpected& operator=(const unexpected<E>& rhs);
       unexpected& operator=(unexpected<E>&& rhs);
@@ -190,23 +190,23 @@ struct error_propagation_traits<utl::expected<V, E>, void> {
 //*****************************************************************************
 
 template <typename E>
-inline utl::unexpected<E>::unexpected(const E& error) : error_{error} {}
+constexpr inline utl::unexpected<E>::unexpected(const E& error) : error_{error} {}
 
 template <typename E>
-inline utl::unexpected<E>::unexpected(E&& error) : error_{std::move(error)} {}
+constexpr inline utl::unexpected<E>::unexpected(E&& error) noexcept : error_{std::move(error)} {}
 
 template <typename E>
-inline utl::unexpected<E>::unexpected(const unexpected<E>& error) : error_{error.error_} {}
+constexpr inline utl::unexpected<E>::unexpected(const unexpected<E>& error) : error_{error.error_} {}
 
 template <typename E>
-inline utl::unexpected<E>::unexpected(unexpected<E>&& error) : error_{std::move(error.error_)} {}
+constexpr inline utl::unexpected<E>::unexpected(unexpected<E>&& error) : error_{std::move(error.error_)} {}
 
 template <typename E>
 template <
   typename... Args,
   typename std::enable_if<std::is_constructible<E, Args...>::value, int>::type
 >
-inline utl::unexpected<E>::unexpected(Args&&... args) : unexpected{E{std::forward<Args>(args)...}} {}
+constexpr inline utl::unexpected<E>::unexpected(Args&&... args) : unexpected{E{std::forward<Args>(args)...}} {}
 
 template <typename E>
 inline utl::unexpected<E>& utl::unexpected<E>::operator=(const unexpected<E>& rhs) {
