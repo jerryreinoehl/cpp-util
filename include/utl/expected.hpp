@@ -36,32 +36,32 @@ namespace utl {
   class expected;
 
   template <typename T>
-  struct expected_traits;
+  struct expected_traits {};
 
   template <typename V, typename E>
   struct expected_traits<expected<V, E>> {
-    typedef V value_type;
-    typedef E error_type;
+    using value_type = V;
+    using error_type = E;
   };
 
   template <typename E>
   struct expected_traits<unexpected<E>> {
-    typedef E error_type;
+    using error_type = E;
   };
 
   template <typename T, typename V, typename E>
   struct normalize_expected {
-    typedef expected<typename std::decay<T>::type, E> type;
+    using type = expected<typename std::decay<T>::type, E>;
   };
 
   template <typename U, typename F, typename V, typename E>
   struct normalize_expected<expected<U, F>, V, E> {
-    typedef expected<U, F> type;
+    using type = expected<U, F>;
   };
 
   template <typename F, typename V, typename E>
   struct normalize_expected<unexpected<F>, V, E> {
-    typedef expected<V, F> type;
+    using type = expected<V, F>;
   };
 
   template <typename V, typename E>
