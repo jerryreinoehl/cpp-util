@@ -21,8 +21,9 @@ namespace utl {
       unexpected& operator=(const unexpected<E>& rhs);
       unexpected& operator=(unexpected<E>&& rhs);
 
-      const E& error() const& noexcept;
+      constexpr const E& error() const& noexcept;
       E& error() & noexcept;
+      constexpr const E&& error() const&& noexcept;
       E&& error() && noexcept;
 
     private:
@@ -232,13 +233,18 @@ inline utl::unexpected<E>& utl::unexpected<E>::operator=(unexpected<E>&& rhs) {
 }
 
 template <typename E>
-inline const E& utl::unexpected<E>::error() const& noexcept {
+constexpr inline const E& utl::unexpected<E>::error() const& noexcept {
   return error_;
 }
 
 template <typename E>
 inline E& utl::unexpected<E>::error() & noexcept {
   return error_;
+}
+
+template <typename E>
+constexpr inline const E&& utl::unexpected<E>::error() const&& noexcept {
+  return std::move(error_);
 }
 
 template <typename E>
