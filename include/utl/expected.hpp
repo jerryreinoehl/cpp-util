@@ -90,11 +90,12 @@ namespace utl {
       >
       V& emplace(Args&&... args);
 
-      bool has_value() const noexcept;
+      constexpr bool has_value() const noexcept;
 
-      V& value() &;
-      const V& value() const&;
-      V&& value() &&;
+      constexpr const V& value() const& noexcept;
+      V& value() & noexcept;
+      constexpr const V&& value() const&& noexcept;
+      V&& value() && noexcept;
 
       E& error() &;
       const E& error() const&;
@@ -327,22 +328,27 @@ inline V& utl::expected<V, E>::emplace(Args&&... args) {
 }
 
 template <typename V, typename E>
-inline bool utl::expected<V, E>::has_value() const noexcept {
+constexpr inline bool utl::expected<V, E>::has_value() const noexcept {
   return has_value_;
 }
 
 template <typename V, typename E>
-inline V& utl::expected<V, E>::value() & {
+constexpr inline const V& utl::expected<V, E>::value() const& noexcept {
   return storage_.value;
 }
 
 template <typename V, typename E>
-inline const V& utl::expected<V, E>::value() const& {
+inline V& utl::expected<V, E>::value() & noexcept {
   return storage_.value;
 }
 
 template <typename V, typename E>
-inline V&& utl::expected<V, E>::value() && {
+constexpr inline const V&& utl::expected<V, E>::value() const&& noexcept {
+  return std::move(storage_.value);
+}
+
+template <typename V, typename E>
+inline V&& utl::expected<V, E>::value() && noexcept {
   return std::move(storage_.value);
 }
 
