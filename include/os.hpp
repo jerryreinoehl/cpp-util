@@ -68,6 +68,10 @@ namespace os {
       // TODO: Add impl for utl::expected<void, E>.
       utl::expected<int, os::error> close() noexcept;
 
+      template <typename... Args>
+      utl::expected<size_t, os::error> printf(utl::string_view format, Args... args) noexcept;
+
+
     private:
       int fd_{-1};
   };
@@ -113,4 +117,13 @@ inline utl::expected<int, os::error> os::file_descriptor::close() noexcept {
     return utl::unexpected<os::error>{errno};
   }
   return 0;
+}
+
+template <typename... Args>
+inline utl::expected<size_t, os::error> os::file_descriptor::printf(utl::string_view format, Args... args) noexcept {
+  int rc = ::dprintf(fd_, format.data(), args...);
+  if (rc < 0) {
+    return utl::unexpected<os::error>{errno};
+  }
+  return static_cast<size_t>(rc);
 }
