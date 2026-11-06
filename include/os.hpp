@@ -39,6 +39,17 @@ namespace os {
     return ::fork();
   }
 
+  struct error {
+    public:
+      constexpr error() noexcept;
+      constexpr error(int err) noexcept;
+
+      std::string to_string() const noexcept;
+
+    private:
+      int errno_{};
+  };
+
   struct file_descriptor {
     public:
       constexpr file_descriptor(int fd);
@@ -52,6 +63,16 @@ namespace os {
 
 };
 
+//*****************************************************************************
+// struct os::error
+//*****************************************************************************
+
+constexpr inline os::error::error() noexcept {}
+constexpr inline os::error::error(int err) noexcept : errno_{err} {}
+
+inline std::string os::error::to_string() const noexcept {
+  return ::strerror(errno_);
+}
 
 //*****************************************************************************
 // struct os::file_descriptor
