@@ -68,6 +68,7 @@ namespace os {
       // TODO: Add impl for utl::expected<void, E>.
       utl::expected<int, os::error> close() noexcept;
 
+      // Write formatted string to this file descriptor.
       template <typename... Args>
       utl::expected<size_t, os::error> printf(utl::string_view format, Args... args) noexcept;
 
