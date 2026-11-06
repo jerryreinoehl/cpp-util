@@ -31,4 +31,12 @@ namespace os {
     std::string expand(const char *s);
   };
 
+  inline int exec(std::vector<utl::string_view> args) {
+    return ::execvp(args[0].data(), reinterpret_cast<char**>(args.data()));
+  }
+
+  inline pid_t fork() {
+    return ::fork();
+  }
+
 };
