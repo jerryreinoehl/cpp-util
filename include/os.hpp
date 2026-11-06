@@ -62,6 +62,12 @@ namespace os {
       // Returns the number of bytes written or an `os::error`.
       utl::expected<size_t, os::error> write(utl::string_view buf) noexcept;
 
+      // Closes this file descriptor.
+      // Return 0 on success or an `os::error`.
+      //
+      // TODO: Add impl for utl::expected<void, E>.
+      utl::expected<int, os::error> close() noexcept;
+
     private:
       int fd_{-1};
   };
@@ -99,4 +105,12 @@ inline utl::expected<size_t, os::error> os::file_descriptor::write(utl::string_v
     return utl::unexpected<os::error>{errno};
   }
   return static_cast<size_t>(rc);
+}
+
+inline utl::expected<int, os::error> os::file_descriptor::close() noexcept {
+  int rc = ::close(fd_);
+  if (rc < 0) {
+    return utl::unexpected<os::error>{errno};
+  }
+  return 0;
 }
