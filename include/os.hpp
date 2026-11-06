@@ -52,10 +52,10 @@ namespace os {
 
   struct file_descriptor {
     public:
-      constexpr file_descriptor(int fd);
+      constexpr file_descriptor(int fd) noexcept;
 
-      ssize_t read(void *buf, size_t count) noexcept;
-      ssize_t write(utl::string_view buf) noexcept;
+      utl::expected<size_t, error> read(void *buf, size_t count) noexcept;
+      utl::expected<size_t, error> write(utl::string_view buf) noexcept;
 
     private:
       int fd_{-1};
@@ -78,12 +78,20 @@ inline std::string os::error::to_string() const noexcept {
 // struct os::file_descriptor
 //*****************************************************************************
 
-constexpr inline os::file_descriptor::file_descriptor(int fd) : fd_{fd} {}
+constexpr inline os::file_descriptor::file_descriptor(int fd) noexcept : fd_{fd} {}
 
-inline ssize_t os::file_descriptor::read(void *buf, size_t count) noexcept {
-  return ::read(fd_, buf, count);
+inline utl::expected<size_t, os::error> os::file_descriptor::read(void *buf, size_t count) noexcept {
+  ssize_t rc = ::read(fd_, buf, count);
+  if (rc < 0) {
+    return utl::unexpected<os::error>{errno};
+  }
+  return static_cast<size_t>(rc);
 }
 
-inline ssize_t os::file_descriptor::write(utl::string_view buf) noexcept {
-  return ::write(fd_, buf.data(), buf.length());
+inline utl::expected<size_t, os::error> os::file_descriptor::write(utl::string_view buf) noexcept {
+  ssize_t rc = ::write(fd_, buf.data(), buf.length());
+  if (rc < 0) {
+    return utl::unexpected<os::error>{errno};
+  }
+  return static_cast<size_t>(rc);
 }
