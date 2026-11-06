@@ -19,6 +19,7 @@ namespace utl {
       constexpr const char& operator[](size_t idx) const noexcept;
 
       constexpr const char *data() const noexcept;
+      const size_t length() const noexcept;
 
       // Create and return a `std::string` from this `string_view`.
       std::string to_string() const noexcept;
@@ -66,6 +67,12 @@ constexpr const char& utl::string_view::operator[](size_t idx) const noexcept {
 
 constexpr const char* utl::string_view::data() const noexcept {
   return data_;
+}
+
+inline const size_t utl::string_view::length() const noexcept {
+  const char *p{data_};
+  for (; *p; ++p);
+  return p - data_;
 }
 
 inline std::string utl::string_view::to_string() const noexcept {
