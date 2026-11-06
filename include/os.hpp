@@ -54,7 +54,10 @@ namespace os {
     public:
       constexpr file_descriptor(int fd) noexcept;
 
+      // Reads `count` bytes from this file descriptor into `buf`.
       utl::expected<size_t, error> read(void *buf, size_t count) noexcept;
+
+      // Write the `buf` to this file descriptor.
       utl::expected<size_t, error> write(utl::string_view buf) noexcept;
 
     private:
