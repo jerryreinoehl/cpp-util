@@ -39,4 +39,30 @@ namespace os {
     return ::fork();
   }
 
+  struct file_descriptor {
+    public:
+      constexpr file_descriptor(int fd);
+
+      ssize_t read(void *buf, size_t count) noexcept;
+      ssize_t write(utl::string_view buf) noexcept;
+
+    private:
+      int fd_{-1};
+  };
+
 };
+
+
+//*****************************************************************************
+// struct os::file_descriptor
+//*****************************************************************************
+
+constexpr inline os::file_descriptor::file_descriptor(int fd) : fd_{fd} {}
+
+inline ssize_t os::file_descriptor::read(void *buf, size_t count) noexcept {
+  return ::read(fd_, buf, count);
+}
+
+inline ssize_t os::file_descriptor::write(utl::string_view buf) noexcept {
+  return ::write(fd_, buf.data(), buf.length());
+}
