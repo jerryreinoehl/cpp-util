@@ -35,10 +35,6 @@ namespace os {
     return ::execvp(args[0].data(), reinterpret_cast<char**>(args.data()));
   }
 
-  inline pid_t fork() {
-    return ::fork();
-  }
-
   struct error {
     public:
       constexpr error() noexcept;
@@ -86,7 +82,9 @@ namespace os {
       int fd_{-1};
   };
 
-  utl::expected<os::file_descriptor, os::error> dup(os::file_descriptor oldfd, os::file_descriptor newfd);
+  utl::expected<pid_t, os::error> fork() noexcept;
+
+  utl::expected<os::file_descriptor, os::error> dup(os::file_descriptor oldfd, os::file_descriptor newfd) noexcept;
 
 };
 
@@ -152,7 +150,16 @@ inline int os::file_descriptor::fd() const noexcept {
 
 //*****************************************************************************
 
-inline utl::expected<os::file_descriptor, os::error> os::dup(os::file_descriptor oldfd, os::file_descriptor newfd) {
+inline utl::expected<pid_t, os::error> os::fork() noexcept {
+  pid_t rc = ::fork();
+  if (rc < 0) {
+    return utl::unexpected<os::error>{errno};
+  }
+  return rc;
+}
+
+inline utl::expected<os::file_descriptor, os::error>
+os::dup(os::file_descriptor oldfd, os::file_descriptor newfd) noexcept {
   int rc = ::dup2(oldfd.fd(), newfd.fd());
   if (rc < 0) {
     return utl::unexpected<os::error>{errno};
