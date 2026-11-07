@@ -52,6 +52,7 @@ namespace os {
 
   struct file_descriptor {
     public:
+      constexpr file_descriptor() noexcept;
       constexpr file_descriptor(int fd) noexcept;
 
       // Reads `count` bytes from this file descriptor into `buf`.
@@ -93,6 +94,8 @@ inline std::string os::error::to_string() const noexcept {
 //*****************************************************************************
 // struct os::file_descriptor
 //*****************************************************************************
+
+constexpr inline os::file_descriptor::file_descriptor() noexcept {}
 
 constexpr inline os::file_descriptor::file_descriptor(int fd) noexcept : fd_{fd} {}
 
