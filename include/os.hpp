@@ -74,7 +74,7 @@ namespace os {
       utl::expected<size_t, os::error> printf(utl::string_view format, Args... args) noexcept;
 
       // `file_descriptor` evaluates to `true` if this is a valid file descriptor.
-      constexpr operator bool() const noexcept;
+      explicit constexpr operator bool() const noexcept;
 
     private:
       int fd_{-1};
