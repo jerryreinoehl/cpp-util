@@ -59,6 +59,9 @@ namespace os {
       // Returns the number of bytes read or an `os::error`.
       utl::expected<size_t, os::error> read(void *buf, size_t count) noexcept;
 
+      // Reads all of the output from this file descriptor as a `std::string`.
+      utl::expected<std::string, os::error> read() noexcept;
+
       // Write the `buf` to this file descriptor.
       // Returns the number of bytes written or an `os::error`.
       utl::expected<size_t, os::error> write(utl::string_view buf) noexcept;

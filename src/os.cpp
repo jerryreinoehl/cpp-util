@@ -1,5 +1,5 @@
-#include "os.hpp"
-#include "util.hpp"
+#include <os.hpp>
+#include <utl/char_iterator.hpp>
 
 #include <sstream>
 
@@ -100,4 +100,25 @@ std::string os::env::expand(const char *s) {
   }
 
   return expanded.str();
+}
+
+//*****************************************************************************
+// struct os::file_descriptor
+//*****************************************************************************
+
+utl::expected<std::string, os::error> os::file_descriptor::read() noexcept {
+  const int buf_size{1024};
+  char buf[buf_size];
+  std::stringstream stream{};
+  utl::expected<size_t, os::error> result{};
+
+  do {
+    result = read(buf, buf_size);
+    if (!result) {
+      return utl::unexpected<os::error>{std::move(result).error()};
+    }
+    stream.write(buf, *result);
+  } while (*result == buf_size);
+
+  return stream.str();
 }
