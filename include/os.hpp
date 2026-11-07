@@ -79,6 +79,9 @@ namespace os {
       // `file_descriptor` evaluates to `true` if this is a valid file descriptor.
       explicit constexpr operator bool() const noexcept;
 
+      // Returns the file descriptor number.
+      int fd() const noexcept;
+
     private:
       int fd_{-1};
   };
@@ -139,4 +142,8 @@ inline utl::expected<size_t, os::error> os::file_descriptor::printf(utl::string_
 
 constexpr inline os::file_descriptor::operator bool() const noexcept {
   return fd_ >= 0;
+}
+
+inline int os::file_descriptor::fd() const noexcept {
+  return fd_;
 }
