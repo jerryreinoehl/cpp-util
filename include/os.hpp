@@ -84,6 +84,8 @@ namespace os {
 
   utl::expected<pid_t, os::error> fork() noexcept;
 
+  // The file descriptor `newfd` is adjusted so that it now refers to the same
+  // open file descriptor as `oldfd`.
   utl::expected<os::file_descriptor, os::error> dup(os::file_descriptor oldfd, os::file_descriptor newfd) noexcept;
 
 };
