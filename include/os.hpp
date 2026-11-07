@@ -38,7 +38,7 @@ namespace os {
   struct error {
     public:
       constexpr error() noexcept;
-      constexpr error(int err) noexcept;
+      explicit constexpr error(int err) noexcept;
 
       std::string to_string() const noexcept;
 
@@ -63,6 +63,10 @@ namespace os {
       // Write the `buf` to this file descriptor.
       // Returns the number of bytes written or an `os::error`.
       utl::expected<size_t, os::error> write(utl::string_view buf) noexcept;
+
+      utl::expected<os::file_descriptor, os::error> dup() const noexcept;
+
+      utl::expected<os::file_descriptor, os::error> dup(os::file_descriptor newfd) const noexcept;
 
       // Closes this file descriptor.
       // Return 0 on success or an `os::error`.
@@ -129,6 +133,22 @@ inline utl::expected<size_t, os::error> os::file_descriptor::write(utl::string_v
     return utl::unexpected<os::error>{errno};
   }
   return static_cast<size_t>(rc);
+}
+
+inline utl::expected<os::file_descriptor, os::error> os::file_descriptor::dup() const noexcept {
+  int fd = ::dup(fd_);
+  if (fd < 0) {
+    return utl::unexpected<os::error>{errno};
+  }
+  return os::file_descriptor{fd};
+}
+
+inline utl::expected<os::file_descriptor, os::error> os::file_descriptor::dup(os::file_descriptor newfd) const noexcept {
+  int fd = ::dup2(fd_, newfd.fd());
+  if (fd < 0) {
+    return utl::unexpected<os::error>{errno};
+  }
+  return os::file_descriptor{fd};
 }
 
 inline utl::expected<int, os::error> os::file_descriptor::close() noexcept {
