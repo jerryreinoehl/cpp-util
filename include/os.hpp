@@ -161,7 +161,7 @@ inline utl::expected<int, os::error> os::file_descriptor::close() noexcept {
 
 template <typename... Args>
 inline utl::expected<size_t, os::error> os::file_descriptor::printf(utl::string_view format, Args... args) noexcept {
-  int rc = ::dprintf(fd_, format.data(), args...);
+  int rc = ::dprintf(fd_, format.data(), std::forward<Args>(args)...);
   if (rc < 0) {
     return utl::unexpected<os::error>{errno};
   }
