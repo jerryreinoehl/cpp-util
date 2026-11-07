@@ -86,6 +86,8 @@ namespace os {
       int fd_{-1};
   };
 
+  utl::expected<os::file_descriptor, os::error> dup(os::file_descriptor oldfd, os::file_descriptor newfd);
+
 };
 
 //*****************************************************************************
@@ -146,4 +148,14 @@ constexpr inline os::file_descriptor::operator bool() const noexcept {
 
 inline int os::file_descriptor::fd() const noexcept {
   return fd_;
+}
+
+//*****************************************************************************
+
+inline utl::expected<os::file_descriptor, os::error> os::dup(os::file_descriptor oldfd, os::file_descriptor newfd) {
+  int rc = ::dup2(oldfd.fd(), newfd.fd());
+  if (rc < 0) {
+    return utl::unexpected<os::error>{errno};
+  }
+  return os::file_descriptor{rc};
 }
