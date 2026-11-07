@@ -73,6 +73,8 @@ namespace os {
       template <typename... Args>
       utl::expected<size_t, os::error> printf(utl::string_view format, Args... args) noexcept;
 
+      // `file_descriptor` evaluates to `true` if this is a valid file descriptor.
+      constexpr operator bool() const noexcept;
 
     private:
       int fd_{-1};
@@ -130,4 +132,8 @@ inline utl::expected<size_t, os::error> os::file_descriptor::printf(utl::string_
     return utl::unexpected<os::error>{errno};
   }
   return static_cast<size_t>(rc);
+}
+
+constexpr inline os::file_descriptor::operator bool() const noexcept {
+  return fd_ >= 0;
 }
