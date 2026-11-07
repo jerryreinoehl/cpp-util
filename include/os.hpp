@@ -46,6 +46,8 @@ namespace os {
       int errno_{};
   };
 
+  std::ostream& operator<<(std::ostream& out, const os::error err) noexcept;
+
   struct file_descriptor {
     public:
       constexpr file_descriptor() noexcept;
@@ -99,6 +101,10 @@ constexpr inline os::error::error(int err) noexcept : errno_{err} {}
 
 inline std::string os::error::to_string() const noexcept {
   return ::strerror(errno_);
+}
+
+inline std::ostream& os::operator<<(std::ostream& out, const os::error err) noexcept {
+  return out << err.to_string() << '\n';
 }
 
 //*****************************************************************************
