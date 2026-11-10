@@ -76,7 +76,7 @@ namespace os {
 
       // Write formatted string to this file descriptor.
       template <typename... Args>
-      utl::expected<size_t, os::error> printf(utl::string_view format, Args... args) noexcept;
+      utl::expected<size_t, os::error> printf(utl::string_view format, Args&&... args) noexcept;
 
       // `file_descriptor` evaluates to `true` if this is a valid file descriptor.
       explicit constexpr operator bool() const noexcept;
@@ -159,8 +159,9 @@ inline utl::expected<int, os::error> os::file_descriptor::close() noexcept {
   return 0;
 }
 
+// TODO: Use va_args here instead of template
 template <typename... Args>
-inline utl::expected<size_t, os::error> os::file_descriptor::printf(utl::string_view format, Args... args) noexcept {
+inline utl::expected<size_t, os::error> os::file_descriptor::printf(utl::string_view format, Args&&... args) noexcept {
   int rc = ::dprintf(fd_, format.data(), std::forward<Args>(args)...);
   if (rc < 0) {
     return utl::unexpected<os::error>{errno};
