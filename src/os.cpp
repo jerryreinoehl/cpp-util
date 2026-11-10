@@ -106,19 +106,15 @@ std::string os::env::expand(const char *s) {
 // struct os::file_descriptor
 //*****************************************************************************
 
-utl::expected<std::string, os::error> os::file_descriptor::read() noexcept {
-  const int buf_size{1024};
+utl::expected<std::string, os::error> os::file_descriptor::read(size_t buf_size) noexcept {
   char buf[buf_size];
   std::stringstream stream{};
-  utl::expected<size_t, os::error> result{};
+  size_t bytes_read{};
 
   do {
-    result = read(buf, buf_size);
-    if (!result) {
-      return utl::unexpected<os::error>{std::move(result).error()};
-    }
-    stream.write(buf, *result);
-  } while (*result == buf_size);
+    bytes_read = unwrap(read(buf, buf_size));
+    stream.write(buf, bytes_read);
+  } while (bytes_read == buf_size);
 
   return stream.str();
 }
